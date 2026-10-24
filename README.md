@@ -93,6 +93,15 @@ node tests/e2e/sync.e2e.mjs
 
 ## Wdrożenie
 
+### Vercel
+Repo zawiera `vercel.json` (instalacja `bun install`, build `bun scripts/build.ts`, katalog `dist`).
+1. vercel.com → Add New → Project → zaimportuj repo z GitHuba.
+2. Settings → Environment Variables: `SUPABASE_URL` i `SUPABASE_ANON_KEY` (klucz publishable).
+3. Deploy. Każdy push na `main` wdraża nową wersję.
+4. W Supabase: Authentication → URL Configuration → Site URL = adres z Vercela.
+
+### Inny hosting
+
 `dist/` to statyczna strona (routing w `#hash`, brak przepisywania URL-i). Wystarczy dowolny hosting
 statyczny z HTTPS (Netlify, Vercel, Cloudflare Pages, GitHub Pages): wgraj zawartość `dist/`.
 Service worker i instalacja PWA działają na HTTPS i `localhost`.

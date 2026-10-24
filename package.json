@@ -1,0 +1,16 @@
+{
+  "name": "matura-quest",
+  "private": true,
+  "version": "1.0.0",
+  "type": "module",
+  "scripts": {
+    "build": "bun scripts/build.ts",
+    "preview": "bun scripts/serve.ts",
+    "test": "bun test tests/unit",
+    "typecheck": "tsc -p ."
+  },
+  "dependencies": {
+    "react": "19.2.8",
+    "react-dom": "19.2.8"
+  }
+}
