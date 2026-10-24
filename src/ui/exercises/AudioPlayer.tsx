@@ -1,5 +1,5 @@
 import { useEffect, useRef, useState } from 'react';
-import { type AudioAvailability, checkAvailability, type PlayHandle, playClip } from '../../audio/speech';
+import { type AudioAvailability, checkAvailability, isIOS, type PlayHandle, playClip } from '../../audio/speech';
 import type { AudioClip } from '../../content/types';
 import { Icon } from '../components/Icon';
 
@@ -51,13 +51,14 @@ export function AudioPlayer({
     setProgress(0);
     setState('playing');
     onPlayed?.();
+    const stopThis = () => { h.stop(); setState('idle'); };
     const h = playClip(clip, rate, {
       onProgress: setProgress,
-      onEnd: () => { setState('idle'); setProgress(1); },
-      onError: (m) => { setState('error'); setErr(m); },
+      onEnd: () => { setState('idle'); setProgress(1); if (activeStop === stopThis) activeStop = null; },
+      onError: (m) => { setState('error'); setErr(m); if (activeStop === stopThis) activeStop = null; },
     });
     handle.current = h;
-    activeStop = () => { h.stop(); setState('idle'); };
+    activeStop = stopThis;
   };
 
   return (
@@ -96,6 +97,9 @@ export function AudioPlayer({
         </div>
       )}
       {state === 'error' && <div className="notice bad" role="alert">{err}</div>}
+      {usable && !clip.url && !compact && isIOS() && (
+        <p className="small muted" style={{ margin: 0 }}>Nie słychać? Podgłośnij przyciskami głośności podczas odtwarzania i sprawdź, czy telefon nie jest połączony ze słuchawkami Bluetooth. Gdy odtwarzanie ruszy, dźwięk gra także w trybie cichym.</p>
+      )}
       {showTranscript && (
         <details className="transcript" open>
           <summary>Transkrypcja – {clip.label}</summary>

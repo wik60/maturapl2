@@ -129,6 +129,18 @@ punktowana. Odpowiedzi otwarte: lista `accepted`, nawiasy = słowa opcjonalne (`
 Aby arkusz mógł użyć zadania, liczba pozycji musi równać się rozmiarowi slotu w `blueprint.ts`.
 Nagrania: dodaj `url` do `AudioClip`, by użyć prawdziwego pliku zamiast syntezy.
 
+## iOS
+
+- Dźwięk: pierwsze dotknięcie odblokowuje syntezę mowy; aplikacja przełącza sesję audio na
+  „playback” (`navigator.audioSession`, iOS 17+) i podtrzymuje ją cichym elementem audio, więc mowa
+  gra także przy przełączniku w trybie cichym. Pusta lista głosów (typowa w aplikacji z ekranu
+  początkowego) nie blokuje odtwarzania – używany jest systemowy głos angielski.
+- Dodawanie do ekranu: karta z instrukcją dla Safari (Udostępnij → Dodaj do ekranu początkowego),
+  przycisk „Zainstaluj” w Chrome/Androidzie, ukrywana po instalacji. Aplikacja z ekranu ma osobny
+  zapis niż Safari – postęp przenosi konto.
+- Testy iOS (`tests/e2e/ios.e2e.mjs`) emulują iPhone'a w Chromium z podstawionym silnikiem mowy;
+  dźwięk trzeba ostatecznie sprawdzić na prawdziwym urządzeniu.
+
 ## Ograniczenia (uczciwie)
 
 - **Prototyp funkcjonalny, nie platforma produkcyjna.** Bank: 224 punktowane pozycje + 6 tematów

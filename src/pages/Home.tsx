@@ -11,6 +11,7 @@ import { startSession, today } from '../store/actions';
 import { useAppState, useStore } from '../store/useStore';
 import { Icon } from '../ui/components/Icon';
 import { pct, plural, Progress } from '../ui/components/ui';
+import { InstallCard } from '../ui/components/InstallPrompt';
 
 export function Home() {
   const state = useAppState();
@@ -63,6 +64,8 @@ export function Home() {
           </p>
         )}
       </section>
+
+      <InstallCard place="home" />
 
       <div className="stat-strip" role="group" aria-label="Twoje statystyki">
         <div className="stat">

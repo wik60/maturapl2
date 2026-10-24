@@ -8,6 +8,7 @@ import { useAppState, useStore } from '../store/useStore';
 import { useSyncView } from '../sync/useSync';
 import { Dialog } from '../ui/components/ui';
 import { AccountSection } from '../ui/components/Account';
+import { InstallCard } from '../ui/components/InstallPrompt';
 import { useAudioAvailability } from '../ui/exercises/AudioPlayer';
 
 const ZONES = ['Europe/Warsaw', 'Europe/London', 'Europe/Dublin', 'Europe/Berlin', 'America/New_York', 'America/Chicago', 'Australia/Sydney'];
@@ -42,6 +43,7 @@ export default function Profile() {
       </nav>
 
       <AccountSection />
+      <InstallCard place="profile" />
       <section className="card">
         <h2>Zapis na urządzeniu</h2>
         <p style={{ marginTop: 0 }}>Postęp zapisuje się {store.persisted() ? <strong>na tym urządzeniu, w tej przeglądarce</strong> : <strong>tylko do zamknięcia karty (przeglądarka blokuje zapis)</strong>}{sv.email ? ' i w chmurze na Twoim koncie.' : '.'}</p>

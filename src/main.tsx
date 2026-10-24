@@ -7,6 +7,14 @@ import { createSync } from './sync/engine';
 import { SyncContext } from './sync/useSync';
 import { safeLocalStorage } from './store/storage';
 import './styles.css';
+import { unlockAudio } from './audio/speech';
+import { captureInstallPrompt } from './ui/components/InstallPrompt';
+
+captureInstallPrompt();
+// iOS only allows speech that starts from a user gesture: unlock on the first tap anywhere.
+for (const ev of ['touchend', 'click', 'keydown'] as const) {
+  document.addEventListener(ev, unlockAudio, { once: true, capture: true, passive: true });
+}
 
 const store = createStore();
 const inFrame = (() => { try { return window.top !== window.self; } catch { return true; } })();
