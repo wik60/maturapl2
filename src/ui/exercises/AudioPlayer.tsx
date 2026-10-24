@@ -83,7 +83,9 @@ export function AudioPlayer({
           <div className="meta">
             {avail === 'checking' && !clip.url && 'Sprawdzam dostępność głosu…'}
             {usable && (left === undefined ? 'Możesz odtwarzać dowolnie wiele razy.' : left > 0 ? `Pozostałe odtworzenia: ${left}` : 'Wykorzystano limit odtworzeń.')}
-            {!compact && usable && !clip.url && <span> · Głos syntezowany w przeglądarce, nie nagranie CKE.</span>}
+            {!compact && usable && (clip.url
+              ? <span> · Głos AI z autorskiego skryptu, nie nagranie CKE.</span>
+              : <span> · Głos syntezowany w przeglądarce, nie nagranie CKE.</span>)}
           </div>
         </div>
       </div>

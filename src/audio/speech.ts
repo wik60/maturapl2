@@ -2,8 +2,10 @@ import type { AudioClip } from '../content/types';
 
 /**
  * Audio for listening tasks.
- * - If a clip has a `url` (a licensed or original recording), it is played with <audio>.
- * - Otherwise the script is synthesised by the browser's Web Speech API.
+ * - If a clip has a `url` (a recording generated from the original script with a neural
+ *   voice, see scripts/generate_audio.py), it is played with <audio>.
+ * - Otherwise – or if the file fails to load – the script is synthesised by the browser's
+ *   Web Speech API.
  * Synthesised speech is clearly labelled in the UI and is never presented as a CKE recording.
  *
  * iOS / Safari specifics handled here:
@@ -191,16 +193,45 @@ function clearQueueIfBusy() {
 
 export function playClip(clip: AudioClip, rate: number, cb: PlayCallbacks): PlayHandle {
   usePlaybackSession();
-  if (clip.url) {
-    const audio = new Audio(clip.url);
-    audio.setAttribute('playsinline', '');
-    audio.addEventListener('timeupdate', () => audio.duration && cb.onProgress?.(audio.currentTime / audio.duration));
-    audio.addEventListener('ended', () => cb.onEnd?.());
-    audio.addEventListener('error', () => cb.onError?.('Nie udało się wczytać pliku z nagraniem.'));
-    audio.play().catch(() => cb.onError?.('Przeglądarka zablokowała odtwarzanie. Dotknij przycisku jeszcze raz.'));
-    return { stop: () => { audio.pause(); audio.currentTime = 0; } };
-  }
+  if (clip.url) return playFile(clip, rate, cb);
+  return speakClip(clip, rate, cb);
+}
 
+/** Generated recording. If the file can't be loaded, falls back to browser speech. */
+function playFile(clip: AudioClip, rate: number, cb: PlayCallbacks): PlayHandle {
+  const audio = new Audio();
+  audio.setAttribute('playsinline', '');
+  audio.preload = 'auto';
+  audio.src = clip.url!;
+  audio.defaultPlaybackRate = rate;
+  audio.playbackRate = rate;
+  let stopped = false;
+  let fallback: PlayHandle | null = null;
+  const fail = (messagePl: string) => {
+    if (stopped || fallback) return;
+    if (hasSpeechApi()) {
+      fallback = speakClip(clip, rate, cb);
+      return;
+    }
+    cb.onError?.(messagePl);
+  };
+  audio.addEventListener('timeupdate', () => audio.duration && cb.onProgress?.(audio.currentTime / audio.duration));
+  audio.addEventListener('ended', () => { if (!stopped) cb.onEnd?.(); });
+  audio.addEventListener('error', () => fail('Nie udało się wczytać pliku z nagraniem.'));
+  audio.play().catch((e: unknown) => {
+    if ((e as { name?: string })?.name === 'NotAllowedError') cb.onError?.('Przeglądarka zablokowała odtwarzanie. Dotknij przycisku jeszcze raz.');
+    else fail('Nie udało się odtworzyć nagrania.');
+  });
+  return {
+    stop: () => {
+      stopped = true;
+      audio.pause();
+      fallback?.stop();
+    },
+  };
+}
+
+function speakClip(clip: AudioClip, rate: number, cb: PlayCallbacks): PlayHandle {
   unlocked = true;
   startSilentKeepAlive();
   const parts = clip.lines.flatMap((l) => chunks(l.text).map((t) => ({ t, voice: l.voice })));

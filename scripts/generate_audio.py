@@ -1,0 +1,135 @@
+#!/usr/bin/env python3
+"""
+Generates natural-sounding recordings for every listening clip with Kokoro-82M
+(open-weights neural TTS, Apache-2.0) – free, offline, no API key.
+
+    pip install kokoro-onnx            # needs Python 3.10+, ffmpeg on PATH
+    curl -LO https://github.com/thewh1teagle/kokoro-onnx/releases/download/model-files-v1.0/kokoro-v1.0.onnx
+    curl -LO https://github.com/thewh1teagle/kokoro-onnx/releases/download/model-files-v1.0/voices-v1.0.bin
+    bun scripts/export-audio.ts audio-scripts.json
+    python3 scripts/generate_audio.py audio-scripts.json
+
+Writes public/audio/<clip>-<hash>.mp3 and src/content/data/audio-manifest.ts.
+Clips whose file already exists for the current script hash are skipped, so re-running
+after editing one script only regenerates that clip. Files for removed or edited
+scripts are deleted.
+"""
+import json
+import os
+import subprocess
+import sys
+import wave
+from pathlib import Path
+
+import numpy as np
+from kokoro_onnx import Kokoro
+
+ROOT = Path(__file__).resolve().parent.parent
+AUDIO_DIR = ROOT / "public" / "audio"
+MANIFEST = ROOT / "src" / "content" / "data" / "audio-manifest.ts"
+MODEL = os.environ.get("KOKORO_MODEL", "kokoro-v1.0.onnx")
+VOICES = os.environ.get("KOKORO_VOICES", "voices-v1.0.bin")
+SR = 24000
+
+# Mostly British voices (as at the matura), with some American ones for variety.
+# Each clip starts at a different place in the pool, so recordings don't all share one speaker.
+FEMALE = ["bf_emma", "af_heart", "bf_isabella", "af_bella", "bf_lily", "af_nicole"]
+MALE = ["bm_george", "am_michael", "bm_lewis", "am_fenrir", "bm_daniel", "am_puck"]
+SPEED = 0.95  # slightly calmer than default, like exam recordings
+PAUSE_SAME = 0.3  # seconds between lines of the same speaker
+PAUSE_TURN = 0.5  # between speakers
+LEAD = 0.4  # silence at the start
+
+
+def lang_of(voice: str) -> str:
+    return "en-gb" if voice.startswith("b") else "en-us"
+
+
+def cast(clip: dict, index: int) -> dict:
+    """Distinct voice per distinct speaker in the clip, rotating through the pools."""
+    roles: dict[str, str] = {}
+    used = {"f": 0, "m": 0}
+    for line in clip["lines"]:
+        key = f'{line["voice"]}:{line["speaker"]}'
+        if key in roles:
+            continue
+        pool = FEMALE if line["voice"] == "f" else MALE
+        roles[key] = pool[(index + used[line["voice"]]) % len(pool)]
+        used[line["voice"]] += 1
+    return roles
+
+
+def write_wav(path: Path, samples: np.ndarray) -> None:
+    pcm = (np.clip(samples, -1, 1) * 32767).astype(np.int16)
+    with wave.open(str(path), "wb") as w:
+        w.setnchannels(1)
+        w.setsampwidth(2)
+        w.setframerate(SR)
+        w.writeframes(pcm.tobytes())
+
+
+def to_mp3(wav: Path, mp3: Path) -> None:
+    subprocess.run(
+        ["ffmpeg", "-y", "-loglevel", "error", "-i", str(wav),
+         "-af", "loudnorm=I=-16:TP=-1.5:LRA=11",
+         "-ar", "24000", "-ac", "1", "-c:a", "libmp3lame", "-b:a", "64k", str(mp3)],
+        check=True,
+    )
+
+
+def main() -> None:
+    scripts = json.loads(Path(sys.argv[1] if len(sys.argv) > 1 else "audio-scripts.json").read_text())
+    AUDIO_DIR.mkdir(parents=True, exist_ok=True)
+    tts = Kokoro(MODEL, VOICES)
+    manifest = {}
+    keep = set()
+    for i, clip in enumerate(scripts):
+        name = f'{clip["id"]}-{clip["hash"]}.mp3'
+        mp3 = AUDIO_DIR / name
+        roles = cast(clip, i)
+        keep.add(name)
+        if not mp3.exists():
+            parts = [np.zeros(int(LEAD * SR), dtype=np.float32)]
+            prev = None
+            for line in clip["lines"]:
+                key = f'{line["voice"]}:{line["speaker"]}'
+                if prev is not None:
+                    gap = PAUSE_SAME if prev == key else PAUSE_TURN
+                    parts.append(np.zeros(int(gap * SR), dtype=np.float32))
+                voice = roles[key]
+                samples, sr = tts.create(line["text"], voice=voice, speed=SPEED, lang=lang_of(voice))
+                assert sr == SR, sr
+                parts.append(samples.astype(np.float32))
+                prev = key
+            parts.append(np.zeros(int(0.3 * SR), dtype=np.float32))
+            audio = np.concatenate(parts)
+            wav = mp3.with_suffix(".wav")
+            write_wav(wav, audio)
+            to_mp3(wav, mp3)
+            wav.unlink()
+            print(f'✓ {clip["id"]}  {len(audio) / SR:.1f}s  {", ".join(sorted(set(roles.values())))}')
+        seconds = round(mp3.stat().st_size * 8 / 64000, 1)
+        manifest[clip["id"]] = {
+            "file": f"./audio/{name}",
+            "hash": clip["hash"],
+            "voices": sorted(set(roles.values())),
+            "seconds": seconds,
+        }
+    for f in AUDIO_DIR.glob("*.mp3"):
+        if f.name not in keep:
+            f.unlink()
+            print(f"– removed stale {f.name}")
+    body = json.dumps(manifest, indent=2, ensure_ascii=False)
+    MANIFEST.write_text(
+        "// Generated by scripts/generate_audio.py – do not edit by hand.\n"
+        "// Maps a listening clip id to its generated recording (public/audio/...).\n"
+        "// Empty until the recordings are generated; the app then uses browser speech synthesis.\n"
+        "export interface GeneratedAudio { file: string; hash: string; voices: string[]; seconds: number }\n"
+        f"export const AUDIO_MANIFEST: Record<string, GeneratedAudio> = {body};\n"
+        "export const AUDIO_ENGINE = 'Kokoro-82M v1.0';\n"
+    )
+    print(f"{len(manifest)} clips in manifest → {MANIFEST.relative_to(ROOT)}")
+
+
+if __name__ == "__main__":
+    main()

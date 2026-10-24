@@ -22,7 +22,7 @@ export default function About() {
       <section className="card">
         <h2>Uczciwie o ograniczeniach</h2>
         <ul className="points-list">
-          <li><strong>Nagrania</strong> są syntezowane przez przeglądarkę (Web Speech API) z autorskich skryptów. Brzmią mniej naturalnie niż nagrania lektorów na maturze. Gdy przeglądarka nie ma angielskiego głosu, aplikacja to zgłasza, a słuchanie z transkrypcją nie jest liczone jako słuchanie.</li>
+          <li><strong>Nagrania</strong> powstają z autorskich skryptów: gdy jest gotowy plik, gra odtwarza głos wygenerowany przez otwarty model mowy Kokoro (licencja Apache 2.0), a w przeciwnym razie używa syntezy mowy przeglądarki (Web Speech API). To nie są nagrania lektorów CKE. Gdy przeglądarka nie ma angielskiego głosu, aplikacja to zgłasza, a słuchanie z transkrypcją nie jest liczone jako słuchanie.</li>
           <li><strong>Ocena wypowiedzi pisemnej</strong> jest automatyczna, regułowa i orientacyjna (zakres ±2 pkt). Program stosuje oficjalne zasady punktowania, ale nie rozumie tekstu jak egzaminator i wykrywa tylko typowe błędy.</li>
           <li><strong>Klucze odpowiedzi</strong> są przechowywane w aplikacji na urządzeniu (tryb offline). Technicznie da się je podejrzeć – to narzędzie do nauki, a nie egzamin z nadzorem.</li>
           <li><strong>Szacunek gotowości</strong> to przedział oparty na Twoich ostatnich odpowiedziach, nie prognoza wyniku matury. Nie podajemy poziomu CEFR.</li>

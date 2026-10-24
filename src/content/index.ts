@@ -5,8 +5,10 @@ import { readingMatchGroups, readingMcGroups, readingMultiGroups, readingSentenc
 import { grammarDrills, sentenceBuildGroups } from './data/supplementary';
 import { vocabulary } from './data/vocab';
 import { writingPrompts } from './data/writing';
+import { clipHash } from '../audio/clipHash';
+import { AUDIO_MANIFEST } from './data/audio-manifest';
 import { type ContentIssue, validateGroup, validateVocab, validateWritingPrompt } from './schema';
-import type { FormatId, Item, Skill, TaskGroup, WritingPrompt } from './types';
+import type { AudioClip, FormatId, Item, Skill, TaskGroup, WritingPrompt } from './types';
 
 export const CONTENT_VERSION = 1;
 
@@ -42,6 +44,30 @@ function loadGroups(): TaskGroup[] {
 }
 
 export const groups: TaskGroup[] = loadGroups();
+
+/** Every listening clip in the bank (group-level and item-level). */
+export function allClips(list: TaskGroup[] = groups): AudioClip[] {
+  const out: AudioClip[] = [];
+  for (const g of list) {
+    if (g.stimulus.kind === 'audio') out.push(...g.stimulus.clips);
+    for (const it of g.items) if (it.audio) out.push(it.audio);
+  }
+  return out;
+}
+
+/** Attach generated recordings whose script still matches the clip (stale files are ignored). */
+export function attachGeneratedAudio(clips: AudioClip[], manifest = AUDIO_MANIFEST): number {
+  let n = 0;
+  for (const c of clips) {
+    const rec = manifest[c.id];
+    if (!c.url && rec && rec.hash === clipHash(c)) {
+      c.url = rec.file;
+      n++;
+    }
+  }
+  return n;
+}
+attachGeneratedAudio(allClips());
 
 export const prompts: WritingPrompt[] = writingPrompts.filter((p) => {
   const issues = validateWritingPrompt(p);

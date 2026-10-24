@@ -50,7 +50,7 @@ bun scripts/serve.ts                  # http://localhost:4173
 Testy:
 
 ```bash
-bun test tests/unit                   # 57 testów jednostkowych i integracyjnych
+bun test tests/unit                   # 60 testów jednostkowych i integracyjnych
 tsc -p .                              # sprawdzanie typów
 node tests/e2e/e2e.mjs                # 14 testów E2E (Playwright + Chromium, serwer na :4173)
 ```
@@ -129,6 +129,20 @@ punktowana. Odpowiedzi otwarte: lista `accepted`, nawiasy = słowa opcjonalne (`
 Aby arkusz mógł użyć zadania, liczba pozycji musi równać się rozmiarowi slotu w `blueprint.ts`.
 Nagrania: dodaj `url` do `AudioClip`, by użyć prawdziwego pliku zamiast syntezy.
 
+### Nagrania (naturalny głos, za darmo)
+
+Nagrania generuje otwarty model mowy **Kokoro-82M** (Apache 2.0, bez klucza API, bez opłat),
+głosami brytyjskimi i amerykańskimi – osobny głos dla każdej osoby w dialogu.
+Najprościej: GitHub → Actions → **Generate listening audio** → *Run workflow* (≈3 min).
+Workflow zapisuje `public/audio/*.mp3` i `src/content/data/audio-manifest.ts`, a Vercel sam wdraża zmianę.
+Lokalnie: instrukcja na górze `scripts/generate_audio.py`.
+
+- Plik ma w nazwie skrót skryptu – po edycji tekstu stare nagranie jest ignorowane (gra wraca
+  do syntezy przeglądarki), dopóki nie wygenerujesz go ponownie.
+- Nagrania są zapisywane w pamięci podręcznej przy pierwszym odtworzeniu i działają offline
+  (service worker obsługuje zapytania Range, których wymaga Safari na iOS).
+- Gdy pliku brak, gra automatycznie używa syntezy mowy przeglądarki.
+
 ## iOS
 
 - Dźwięk: pierwsze dotknięcie odblokowuje syntezę mowy; aplikacja przełącza sesję audio na
@@ -145,7 +159,7 @@ Nagrania: dodaj `url` do `AudioClip`, by użyć prawdziwego pliku zamiast syntez
 
 - **Prototyp funkcjonalny, nie platforma produkcyjna.** Bank: 224 punktowane pozycje + 6 tematów
   pisania + 140 słówek – wystarcza na 2 różne pełne arkusze.
-- **Nagrania** to synteza mowy z autorskich skryptów; brak angielskiego głosu → wyraźny komunikat,
+- **Nagrania** to głos AI (Kokoro) albo synteza mowy przeglądarki z autorskich skryptów – nie lektorzy; brak angielskiego głosu → wyraźny komunikat,
   a słuchanie z transkrypcją nie liczy się do umiejętności „słuchanie”.
 - **Ocena pisania** regułowa i orientacyjna (zakres ±2 pkt); brak zewnętrznego modelu AI.
 - **Klucze odpowiedzi** są w aplikacji (tryb offline) – technicznie da się je podejrzeć.

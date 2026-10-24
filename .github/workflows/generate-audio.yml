@@ -1,0 +1,46 @@
+# Generates natural recordings for the listening tasks with the open Kokoro-82M model
+# (Apache-2.0, no API key, free on GitHub Actions). Runs only when started by hand:
+# GitHub → Actions → "Generate listening audio" → Run workflow.
+# Commits public/audio/*.mp3 + src/content/data/audio-manifest.ts, which redeploys Vercel.
+name: Generate listening audio
+on:
+  workflow_dispatch:
+permissions:
+  contents: write
+jobs:
+  audio:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: oven-sh/setup-bun@v2
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+      - name: Install Kokoro and ffmpeg
+        run: |
+          sudo apt-get update -qq && sudo apt-get install -y -qq ffmpeg
+          pip install "kokoro-onnx>=0.4,<1"
+      - name: Cache model
+        uses: actions/cache@v4
+        with:
+          path: |
+            kokoro-v1.0.onnx
+            voices-v1.0.bin
+          key: kokoro-v1.0
+      - name: Download model
+        run: |
+          [ -f kokoro-v1.0.onnx ] || curl -sSLO https://github.com/thewh1teagle/kokoro-onnx/releases/download/model-files-v1.0/kokoro-v1.0.onnx
+          [ -f voices-v1.0.bin ] || curl -sSLO https://github.com/thewh1teagle/kokoro-onnx/releases/download/model-files-v1.0/voices-v1.0.bin
+      - name: Generate
+        run: |
+          bun install
+          bun scripts/export-audio.ts audio-scripts.json
+          python scripts/generate_audio.py audio-scripts.json
+      - name: Commit recordings
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "41898699+github-actions[bot]@users.noreply.github.com"
+          git add public/audio src/content/data/audio-manifest.ts
+          git diff --cached --quiet && echo "No changes" && exit 0
+          git commit -m "Wygeneruj nagrania do słuchania (Kokoro)"
+          git push

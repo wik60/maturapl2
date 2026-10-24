@@ -1,5 +1,6 @@
 import { useState } from 'react';
 import { SECTION_NAMES } from '../content/formats';
+import { allClips } from '../content';
 import { examCapacity } from '../exam/assemble';
 import { BLUEPRINT_PP_2025 } from '../exam/blueprint';
 import { Link, navigate } from '../router/router';
@@ -50,7 +51,7 @@ export default function ExamHub() {
           <li>Wypowiedź pisemna jest oceniana automatycznie i orientacyjnie – wynik ±2 pkt.</li>
           <li>Na maturze, żeby zdać, trzeba zdobyć co najmniej 30% punktów.</li>
         </ul>
-        {avail !== 'ready' && avail !== 'checking' && (
+        {avail !== 'ready' && avail !== 'checking' && !allClips().every((c) => c.url) && (
           <div className="notice bad">Ta przeglądarka nie odtworzy nagrań (brak syntezy mowy z angielskim głosem). Część ze słuchania będzie niemożliwa do rozwiązania – uruchom arkusz w Chrome, Edge lub Safari.</div>
         )}
         <label className="setting">

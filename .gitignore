@@ -4,3 +4,8 @@ dist-sync/
 dist-artifact/
 .env
 *.log
+dist-audio/
+audio-scripts.json
+kokoro-v1.0.onnx
+voices-v1.0.bin
+__pycache__/

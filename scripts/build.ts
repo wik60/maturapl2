@@ -59,7 +59,7 @@ function walk(dir: string): string[] {
     return statSync(p).isDirectory() ? walk(p) : [p];
   });
 }
-const files = walk(dist).map((p) => `./${relative(dist, p)}`).filter((p) => p !== './sw.js');
+const files = walk(dist).map((p) => `./${relative(dist, p)}`).filter((p) => p !== './sw.js' && !p.startsWith('./audio/'));
 const version = Bun.hash(files.join('|') + outputs.join('|')).toString(36);
 const sw = readFileSync(join(root, 'public/sw.js'), 'utf8')
   .replace("'__VERSION__'", JSON.stringify(version))
