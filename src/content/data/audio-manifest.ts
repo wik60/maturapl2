@@ -2,5 +2,206 @@
 // Maps a listening clip id to its generated recording (public/audio/...).
 // Empty until the recordings are generated; the app then uses browser speech synthesis.
 export interface GeneratedAudio { file: string; hash: string; voices: string[]; seconds: number }
-export const AUDIO_MANIFEST: Record<string, GeneratedAudio> = {};
-export const AUDIO_ENGINE = '';
+export const AUDIO_MANIFEST: Record<string, GeneratedAudio> = {
+  "lm1-1": {
+    "file": "./audio/lm1-1-07c974a9.mp3",
+    "hash": "07c974a9",
+    "voices": [
+      "bf_emma"
+    ],
+    "seconds": 16.5
+  },
+  "lm1-2": {
+    "file": "./audio/lm1-2-fba35800.mp3",
+    "hash": "fba35800",
+    "voices": [
+      "am_michael"
+    ],
+    "seconds": 18.5
+  },
+  "lm1-3": {
+    "file": "./audio/lm1-3-23d00a1c.mp3",
+    "hash": "23d00a1c",
+    "voices": [
+      "bf_isabella"
+    ],
+    "seconds": 12.9
+  },
+  "lm1-4": {
+    "file": "./audio/lm1-4-da3e7147.mp3",
+    "hash": "da3e7147",
+    "voices": [
+      "am_fenrir"
+    ],
+    "seconds": 14.8
+  },
+  "lm1-5": {
+    "file": "./audio/lm1-5-1f22836c.mp3",
+    "hash": "1f22836c",
+    "voices": [
+      "bf_lily"
+    ],
+    "seconds": 17.2
+  },
+  "lm2-1": {
+    "file": "./audio/lm2-1-3fa829b3.mp3",
+    "hash": "3fa829b3",
+    "voices": [
+      "am_puck"
+    ],
+    "seconds": 15.9
+  },
+  "lm2-2": {
+    "file": "./audio/lm2-2-f1f08ff8.mp3",
+    "hash": "f1f08ff8",
+    "voices": [
+      "bf_emma"
+    ],
+    "seconds": 15.4
+  },
+  "lm2-3": {
+    "file": "./audio/lm2-3-5695b4fe.mp3",
+    "hash": "5695b4fe",
+    "voices": [
+      "am_michael"
+    ],
+    "seconds": 18.7
+  },
+  "lm2-4": {
+    "file": "./audio/lm2-4-2e0eafd2.mp3",
+    "hash": "2e0eafd2",
+    "voices": [
+      "bf_isabella"
+    ],
+    "seconds": 15.1
+  },
+  "lm2-5": {
+    "file": "./audio/lm2-5-390fb82d.mp3",
+    "hash": "390fb82d",
+    "voices": [
+      "am_fenrir"
+    ],
+    "seconds": 15.8
+  },
+  "lmc1-1": {
+    "file": "./audio/lmc1-1-6daed8c5.mp3",
+    "hash": "6daed8c5",
+    "voices": [
+      "bf_lily",
+      "bm_daniel"
+    ],
+    "seconds": 17.0
+  },
+  "lmc1-2": {
+    "file": "./audio/lmc1-2-793d878e.mp3",
+    "hash": "793d878e",
+    "voices": [
+      "af_nicole"
+    ],
+    "seconds": 23.6
+  },
+  "lmc1-3": {
+    "file": "./audio/lmc1-3-7f794822.mp3",
+    "hash": "7f794822",
+    "voices": [
+      "bf_emma",
+      "bm_george"
+    ],
+    "seconds": 12.7
+  },
+  "lmc1-4": {
+    "file": "./audio/lmc1-4-87e53170.mp3",
+    "hash": "87e53170",
+    "voices": [
+      "am_michael"
+    ],
+    "seconds": 16.3
+  },
+  "lmc1-5": {
+    "file": "./audio/lmc1-5-5d96da37.mp3",
+    "hash": "5d96da37",
+    "voices": [
+      "bf_isabella",
+      "bm_lewis"
+    ],
+    "seconds": 13.8
+  },
+  "lmc1-6": {
+    "file": "./audio/lmc1-6-7a83d917.mp3",
+    "hash": "7a83d917",
+    "voices": [
+      "af_bella"
+    ],
+    "seconds": 15.8
+  },
+  "lmc2-1": {
+    "file": "./audio/lmc2-1-f51fcf7f.mp3",
+    "hash": "f51fcf7f",
+    "voices": [
+      "af_nicole",
+      "bf_lily"
+    ],
+    "seconds": 13.1
+  },
+  "lmc2-2": {
+    "file": "./audio/lmc2-2-58bb2f2e.mp3",
+    "hash": "58bb2f2e",
+    "voices": [
+      "am_puck"
+    ],
+    "seconds": 15.0
+  },
+  "lmc2-3": {
+    "file": "./audio/lmc2-3-c2a5b01b.mp3",
+    "hash": "c2a5b01b",
+    "voices": [
+      "bf_emma",
+      "bm_george"
+    ],
+    "seconds": 16.0
+  },
+  "lmc2-4": {
+    "file": "./audio/lmc2-4-a5d7a03a.mp3",
+    "hash": "a5d7a03a",
+    "voices": [
+      "af_heart",
+      "am_michael"
+    ],
+    "seconds": 11.5
+  },
+  "lmc2-5": {
+    "file": "./audio/lmc2-5-308c8dce.mp3",
+    "hash": "308c8dce",
+    "voices": [
+      "bf_isabella"
+    ],
+    "seconds": 14.6
+  },
+  "lmc2-6": {
+    "file": "./audio/lmc2-6-e8d5cb19.mp3",
+    "hash": "e8d5cb19",
+    "voices": [
+      "af_bella",
+      "am_fenrir"
+    ],
+    "seconds": 12.4
+  },
+  "lg1": {
+    "file": "./audio/lg1-3fcaceab.mp3",
+    "hash": "3fcaceab",
+    "voices": [
+      "bf_lily",
+      "bm_daniel"
+    ],
+    "seconds": 40.8
+  },
+  "lg2": {
+    "file": "./audio/lg2-21f596e3.mp3",
+    "hash": "21f596e3",
+    "voices": [
+      "am_puck"
+    ],
+    "seconds": 32.1
+  }
+};
+export const AUDIO_ENGINE = 'Kokoro-82M v1.0';
