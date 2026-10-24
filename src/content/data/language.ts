@@ -284,6 +284,20 @@ export const grammarMcGroups: TaskGroup[] = [
       mc('gm3.4', 'Luka 4', ['take', 'will take', 'would take'], 'B', 'Pierwszy tryb warunkowy: If + Present Simple, will + verb.', { tag: 'conditionals' }),
     ],
   },
+  {
+    id: 'gm4', format: 'U_GRAMMAR_MC', title: 'A trip to London', instructionPl: GMC_INSTR, topic: 'travel', difficulty: 3,
+    source: ORIGINAL, contentVersion: V,
+    stimulus: {
+      kind: 'text', title: 'A TRIP TO LONDON',
+      body: 'Hi Kasia,\nI\'m writing from London! We [[1]] here three days ago and we have already seen so many places. Yesterday we visited the British Museum, [[2]] is free for everyone. Tomorrow we [[3]] a boat trip on the Thames – Dad booked the tickets last week. If the weather [[4]] good, we will also go to Greenwich.\nSee you soon,\nMarta',
+    },
+    items: [
+      mc('gm4.1', 'Luka 1', ['arrived', 'have arrived', 'were arriving'], 'A', '„Three days ago” – konkretny moment w przeszłości: Past Simple.', { tag: 'past-simple' }),
+      mc('gm4.2', 'Luka 2', ['who', 'which', 'what'], 'B', 'Zdanie względne o rzeczy (muzeum), po przecinku – which.', { tag: 'relative-clauses' }),
+      mc('gm4.3', 'Luka 3', ['take', 'are taking', 'would take'], 'B', 'Zaplanowane i zarezerwowane (bilety kupione) – Present Continuous.', { tag: 'future' }),
+      mc('gm4.4', 'Luka 4', ['will be', 'is', 'would be'], 'B', 'Pierwszy tryb warunkowy: if + Present Simple, will + bezokolicznik.', { tag: 'conditionals' }),
+    ],
+  },
 ];
 
 /* ------------------------------------------------------------------ */
@@ -331,6 +345,16 @@ export const openClozeGroups: TaskGroup[] = [
       { id: 'oc4.1', kind: 'open', accepted: ['by'], marking: 'strict', maxWords: 1, explanationPl: 'Środek transportu: by train, by bus, by car.', tag: 'prepositions' },
       { id: 'oc4.2', kind: 'open', accepted: ['which'], marking: 'strict', maxWords: 1, explanationPl: 'Po przecinku (zdanie względne dodające informację) używamy „which”, nie „that”.', tag: 'relative-clauses' },
       { id: 'oc4.3', kind: 'open', accepted: ['had'], marking: 'strict', maxWords: 1, explanationPl: 'Konieczność w przeszłości: had to + bezokolicznik.', tag: 'modals' },
+    ],
+  },
+  {
+    id: 'oc5', format: 'U_OPEN_CLOZE', title: 'My new hobby', instructionPl: OC_INSTR, topic: 'free-time', difficulty: 2,
+    source: ORIGINAL, contentVersion: V,
+    stimulus: { kind: 'text', title: 'Blog post', body: 'Three months ago I started climbing. I go to a climbing wall [[1]] my best friend twice a week. At first I was afraid of falling, but now I feel much more confident. I\'m not very good [[2]] it yet, but I\'m getting better every week. Next month we are going to climb outdoors for the [[3]] time!' },
+    items: [
+      { id: 'oc5.1', kind: 'open', accepted: ['with'], marking: 'strict', maxWords: 1, explanationPl: 'Chodzimy gdzieś Z kimś – „with my best friend”.', tag: 'prepositions' },
+      { id: 'oc5.2', kind: 'open', accepted: ['at'], marking: 'strict', maxWords: 1, explanationPl: 'Stałe połączenie: be good AT something.', tag: 'fixed-phrases' },
+      { id: 'oc5.3', kind: 'open', accepted: ['first'], marking: 'strict', maxWords: 1, explanationPl: '„For the first time” – po raz pierwszy.', tag: 'fixed-phrases' },
     ],
   },
 ];

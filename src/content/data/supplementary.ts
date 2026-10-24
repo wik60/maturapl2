@@ -85,6 +85,30 @@ export const grammarDrills: TaskGroup[] = [
     mc('sd-rel.3', 'He told me that he ____ tired.', ['is', 'was', 'were'], 'B', 'Mowa zależna po czasie przeszłym – cofnięcie czasu: is → was.'),
     mc('sd-rel.4', 'She asked me ____ I liked pizza.', ['that', 'if', 'do'], 'B', 'Pytanie tak/nie w mowie zależnej – if/whether.'),
   ]),
+  drill('sd-be', 'To be, have got, there is/are', 'to-be', 1, [
+    mc('sd-be.1', 'My sister ____ 17 years old.', ['has', 'is', 'have'], 'B', 'Wiek podajemy z „be”: She is 17 (nie „has 17”).', { rule: 'wiek → be + liczba' }),
+    mc('sd-be.2', '____ there a bank near here?', ['Is', 'Are', 'Has'], 'A', 'Pytanie o jedną rzecz: Is there…?', { rule: 'there is (1) / there are (wiele)' }),
+    mc('sd-be.3', 'We ____ got a dog, but we have two cats.', ['haven\'t', 'hasn\'t', 'aren\'t'], 'A', '„Have got” dla „we” – przeczenie: haven\'t got.'),
+    mc('sd-be.4', 'There ____ some apples in the fridge.', ['is', 'are', 'be'], 'B', '„Apples” – liczba mnoga: there are.'),
+    mc('sd-be.5', '____ your parents at home now?', ['Is', 'Do', 'Are'], 'C', 'Pytanie z „be” dla „they”: Are your parents…?'),
+    mc('sd-be.6', 'How many brothers ____ he got?', ['has', 'have', 'is'], 'A', '„He” + have got → has he got?'),
+  ]),
+  drill('sd-pron', 'Zaimki i przymiotniki dzierżawcze', 'pronouns', 1, [
+    mc('sd-pron.1', 'This isn\'t my phone. It\'s ____.', ['her', 'hers', 'she'], 'B', 'Na końcu zdania, bez rzeczownika – zaimek dzierżawczy „hers”.', { rule: 'my/your/her + rzeczownik; mine/yours/hers – samodzielnie' }),
+    mc('sd-pron.2', 'Can you help ____ with my homework?', ['I', 'my', 'me'], 'C', 'Po czasowniku (help) – forma dopełnienia: me.'),
+    mc('sd-pron.3', 'The children are doing ____ homework.', ['their', 'there', 'they\'re'], 'A', '„Their” = ich (dzierżawczy). „There” = tam, „they\'re” = they are.'),
+    mc('sd-pron.4', 'Is that ____ bike? – No, it\'s my brother\'s.', ['you', 'your', 'yours'], 'B', 'Przed rzeczownikiem (bike) – przymiotnik dzierżawczy „your”.'),
+    mc('sd-pron.5', 'Kate and ____ are best friends.', ['me', 'I', 'my'], 'B', 'W podmiocie zdania – „I”: Kate and I are…'),
+    mc('sd-pron.6', 'The cat is eating ____ dinner.', ['it\'s', 'its', 'it'], 'B', '„Its” = jego (o zwierzęciu/rzeczy). „It\'s” = it is.'),
+  ]),
+  drill('sd-prep', 'Przyimki czasu i miejsca', 'prepositions', 2, [
+    mc('sd-prep.1', 'My birthday is ____ May.', ['on', 'in', 'at'], 'B', 'Miesiące, lata, pory roku – in.', { rule: 'in May · on Monday / on 5 May · at 7 o\'clock' }),
+    mc('sd-prep.2', 'The lesson starts ____ 8:15.', ['at', 'in', 'on'], 'A', 'Godziny – at.'),
+    mc('sd-prep.3', 'We\'re meeting ____ Saturday afternoon.', ['in', 'at', 'on'], 'C', 'Dzień tygodnia (także z porą dnia) – on.'),
+    mc('sd-prep.4', 'I\'ll wait for you ____ the bus stop.', ['at', 'on', 'in'], 'A', 'Konkretny punkt (przystanek, drzwi) – at.'),
+    mc('sd-prep.5', 'There\'s a picture ____ the wall.', ['in', 'on', 'at'], 'B', 'Na powierzchni – on.'),
+    mc('sd-prep.6', 'She was born ____ 2008.', ['on', 'at', 'in'], 'C', 'Rok – in.'),
+  ]),
 ];
 
 const BUILD_INSTR = 'Ćwiczenie dodatkowe. Ułóż poprawne zdanie z podanych wyrazów.';

@@ -1,7 +1,7 @@
-import { useRef, useState } from 'react';
+import { useEffect, useRef, useState } from 'react';
 import { CHAPTERS, isUnlocked, type Level, levelStatus, type LevelStatus, nextLevel } from '../game/map';
 import { navigate } from '../router/router';
-import { startSession } from '../store/actions';
+import { resolveUnit, startSession } from '../store/actions';
 import { useAppState, useStore } from '../store/useStore';
 import { Icon } from '../ui/components/Icon';
 import { pct } from '../ui/components/ui';
@@ -16,10 +16,15 @@ const STATUS_PL: Record<LevelStatus, string> = {
 
 /** One colour per chapter – each region of the map has its own identity. */
 const CHAPTER_COLORS = ['#2a45d6', '#0d8a82', '#7440cf', '#d0601a', '#1c9454', '#c1377a', '#1b78b0', '#b2402a'];
-/** Horizontal offsets of the zigzag path (px). */
-const ZIG = [0, 62, 78, 30, -40, -78, -50, 10];
+/** Horizontal offset of the winding path (px). */
+const zig = (i: number) => Math.round(Math.sin(i * 0.85) * 72);
+const KIND_PL: Record<string, string> = { review: 'Powtórka', boss: 'Test rozdziału', exam: 'Arkusz próbny' };
 
 let lastChapter: number | null = null;
+
+function countQuestions(l: Level) {
+  return l.groupIds.reduce((s, u) => s + (resolveUnit(u)?.items.length ?? 0), 0);
+}
 
 export default function MapPage() {
   const state = useAppState();
@@ -30,6 +35,15 @@ export default function MapPage() {
   const [dir, setDir] = useState<'next' | 'prev' | ''>('');
   const [preview, setPreview] = useState<Level | null>(null);
   const touch = useRef<number | null>(null);
+  const pathRef = useRef<HTMLOListElement | null>(null);
+
+  // keep the next step in view when the chapter opens
+  useEffect(() => {
+    const el = pathRef.current;
+    const target = el?.querySelector<HTMLElement>('.node.current') ?? el?.querySelector<HTMLElement>('.node.available, .node.in-progress');
+    if (el && target) el.scrollTop = Math.max(0, target.offsetTop - el.clientHeight / 2 + target.offsetHeight / 2);
+    else if (el) el.scrollTop = 0;
+  }, [ch]);
 
   const go = (i: number) => {
     if (i < 0 || i >= CHAPTERS.length || i === ch) return;
@@ -68,7 +82,7 @@ export default function MapPage() {
       <header className="chapter-head">
         <button className="btn icon sm" onClick={() => go(ch - 1)} disabled={ch === 0} aria-label="Poprzedni rozdział"><Icon name="back" /></button>
         <div className="t">
-          <small>Rozdział {ch + 1} z {CHAPTERS.length} · {done}/{c.levels.length} zaliczone</small>
+          <small>Rozdział {ch + 1} z {CHAPTERS.length} · {done}/{c.levels.length} kroków</small>
           <h1>{c.namePl}</h1>
         </div>
         <button className="btn icon sm" onClick={() => go(ch + 1)} disabled={ch === CHAPTERS.length - 1} aria-label="Następny rozdział"><span style={{ display: 'inline-flex', transform: 'scaleX(-1)' }}><Icon name="back" /></span></button>
@@ -77,29 +91,29 @@ export default function MapPage() {
         {CHAPTERS.map((x, i) => <span key={x.id} className={`${i === ch ? 'on' : ''} ${chapterDone(i) ? 'done' : ''}`} />)}
       </div>
 
-      <ol className={`path ${dir ? `slide-${dir}` : ''}`} key={c.id} aria-label={`Poziomy: ${c.namePl}`}>
+      <ol className={`path ${dir ? `slide-${dir}` : ''}`} key={c.id} ref={pathRef} aria-label={`Kroki: ${c.namePl}`}>
         {c.levels.map((l, li) => {
           const st = levelStatus(state, l);
           const locked = st === 'locked';
           const isCurrent = current?.id === l.id;
           return (
-            <li key={l.id} className={`node ${st} ${isCurrent ? 'current' : ''}`} style={{ '--x': `${ZIG[li % ZIG.length]}px` } as Record<string, string>}>
+            <li key={l.id} className={`node ${st} ${isCurrent ? 'current' : ''} k-${l.kind ?? 'lesson'}`} style={{ '--x': `${zig(li)}px` } as Record<string, string>}>
               {isCurrent && <span className="start-bubble" aria-hidden="true">{st === 'in-progress' ? 'DALEJ' : 'START'}</span>}
               <button
                 type="button"
                 className="node-btn"
                 onClick={() => isUnlocked(state, l) && setPreview(l)}
                 aria-disabled={locked}
-                aria-label={`${l.titlePl}. ${STATUS_PL[st]}.${locked ? ' Najpierw zalicz poprzedni poziom.' : ''}`}
+                aria-label={`Krok ${li + 1}: ${l.titlePl}. ${STATUS_PL[st]}.${locked ? ' Najpierw zalicz poprzedni krok.' : ''}`}
               >
-                <Icon name={locked ? 'lock' : st === 'mastered' ? 'star' : st === 'completed' ? 'check' : l.kind === 'exam' ? 'exam' : 'play'} />
+                <Icon name={st === 'mastered' ? 'star' : st === 'completed' ? 'check' : l.kind === 'boss' ? 'trophy' : l.kind === 'exam' ? 'exam' : l.kind === 'review' ? 'repeat' : locked ? 'lock' : 'play'} />
               </button>
               <span className="lbl" aria-hidden="true">{l.titlePl}</span>
             </li>
           );
         })}
       </ol>
-      <p className="map-foot">{c.descPl}</p>
+
 
       {preview && (
         <>
@@ -107,12 +121,12 @@ export default function MapPage() {
           <div className="sheet" role="dialog" aria-modal="true" aria-labelledby="lvl-t" style={{ '--ch': color } as Record<string, string>}>
             <div className="grab" />
             <div className="row between" style={{ marginBottom: '0.3rem' }}>
-              <span className="badge">{STATUS_PL[pst]}</span>
+              <span className="badge">{preview.kind ? `${KIND_PL[preview.kind]} · ` : ''}{STATUS_PL[pst]}</span>
               <span className="small muted">Nagroda: {preview.xp} XP{p?.attempts ? ` · najlepiej ${pct(p.best)}` : ''}</span>
             </div>
             <h2 id="lvl-t">{preview.titlePl}</h2>
             <p>{preview.objectivePl}</p>
-            <p className="small muted">Zaliczenie od 70%, opanowanie od 90% poprawnych odpowiedzi.</p>
+            <p className="small muted">{preview.kind === 'exam' ? '120 minut, 60 punktów.' : `${preview.groupIds.length > 0 ? `${countQuestions(preview)} pytań · ` : ''}zaliczenie od 70%, opanowanie od 90%.`}</p>
             <button className="btn block" style={{ '--face': color, '--edge-c': `color-mix(in srgb, ${color} 62%, #000)` } as Record<string, string>} onClick={() => start(preview)}>
               {preview.kind === 'exam' ? 'Przejdź do arkusza' : p?.completedAt ? 'Powtórz poziom' : 'Zacznij'}
             </button>

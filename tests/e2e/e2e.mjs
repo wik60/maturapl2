@@ -109,12 +109,13 @@ await test('map lesson on a phone: one question per screen, wrong answer sheet, 
   await page.waitForTimeout(480);
   await page.getByRole('button', { name: 'Dalej' }).click();
   await steps(page, [null, null, null]);
-  // second task: present tenses drill – all correct
-  await steps(page, ['is knocking', 'goes', 'love', 'does'].map(radio));
   await page.getByRole('heading', { name: /Poziom|Prawie|Lekcja|Koniec/ }).waitFor();
   const s = await state(page);
   assert(s.levels['c1-1']?.attempts === 1, 'level attempt not recorded');
   assert(Object.keys(s.mistakes).length >= 4, 'mistakes not stored');
+  // the map now has 12 steps per chapter
+  await page.goto(`${BASE}/#/map`);
+  assert((await page.getByRole('list', { name: /Kroki: Obóz startowy/ }).getByRole('listitem').count()) === 12, 'chapter does not have 12 steps');
   await ctx.close();
 });
 

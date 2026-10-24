@@ -18,7 +18,7 @@ const STATUS_PL: Record<SyncStatus, string> = {
 
 const time = (ts?: number) => (ts ? new Date(ts).toLocaleString('pl-PL', { day: 'numeric', month: 'short', hour: '2-digit', minute: '2-digit' }) : '');
 
-export function AccountSection() {
+export function AccountSection({ bare = false }: { bare?: boolean } = {}) {
   const sync = useSyncEngine();
   const v = useSyncView();
   const [email, setEmail] = useState('');
@@ -53,8 +53,8 @@ export function AccountSection() {
   };
 
   return (
-    <section className="card" aria-labelledby="acc-title">
-      <h2 id="acc-title">Konto i synchronizacja</h2>
+    <section className={bare ? undefined : "card"} aria-labelledby="acc-title">
+      <h2 id="acc-title" className={bare ? "sr-only" : undefined}>Konto i synchronizacja</h2>
 
       {v.blockedByHost && (
         <div className="notice" style={{ marginBottom: '0.75rem' }}>W tym podglądzie (claude.ai) przeglądarka blokuje połączenia z zewnętrznymi serwerami, więc synchronizacja nie zadziała. Działa w wersji wdrożonej na własnym adresie (np. Netlify, Vercel).</div>

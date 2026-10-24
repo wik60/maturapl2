@@ -10,7 +10,7 @@ Interfejs po polsku, zadania po angielsku. Nazwa robocza – zmiana w `src/confi
 | Sekcja | Trasa | Opis |
 |---|---|---|
 | Start | `#/` | „Co teraz?”, poziom/XP, seria, cel dzienny, zadania dnia, gotowość (przedział), ostatnie wyniki, tryby gry |
-| Mapa przygody | `#/map` | 8 rozdziałów, 25 poziomów; stany: zablokowany / dostępny / w toku / zaliczony (≥70%) / opanowany (≥90%) |
+| Mapa przygody | `#/map` | 8 rozdziałów × 12 kroków (8 lekcji, 3 powtórki, test rozdziału; na końcu pełny arkusz); stany: zablokowany / dostępny / w toku / zaliczony (≥70%) / opanowany (≥90%) |
 | Ćwiczenia | `#/practice` | każdy typ zadania maturalnego osobno (filtry `?section=`, `?format=`) |
 | Sesja | `#/session/:id` | wspólny silnik zadań: sprawdzanie, wyjaśnienia, nagrody, podsumowanie |
 | Arkusz próbny | `#/exam`, `#/exam/:id`, `#/exam/:id/results` | 120 min, 60 pkt, blueprint 15/20/13/12, spis zadań, 2 odtworzenia nagrań, autooddanie, przegląd odpowiedzi |
@@ -157,7 +157,7 @@ Lokalnie: instrukcja na górze `scripts/generate_audio.py`.
 
 ## Ograniczenia (uczciwie)
 
-- **Prototyp funkcjonalny, nie platforma produkcyjna.** Bank: 224 punktowane pozycje + 6 tematów
+- **Prototyp funkcjonalny, nie platforma produkcyjna.** Bank: 66 wiązek, 268 punktowanych pozycji + 6 tematów
   pisania + 140 słówek – wystarcza na 2 różne pełne arkusze.
 - **Nagrania** to głos AI (Kokoro) albo synteza mowy przeglądarki z autorskich skryptów – nie lektorzy; brak angielskiego głosu → wyraźny komunikat,
   a słuchanie z transkrypcją nie liczy się do umiejętności „słuchanie”.

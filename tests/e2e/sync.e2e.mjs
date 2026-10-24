@@ -46,7 +46,7 @@ await test('guest progress is kept and uploaded on sign-up; status shows synced'
   const { ctx, page, errors } = await device();
   await answerFd1(page, [/Yes, please/, /Go straight on/, /Would you like to come/]);
   const xp = (await st(page)).xp;
-  await page.goto(`${BASE}/#/profile`);
+  await page.goto(`${BASE}/#/profile?s=konto`);
   await page.getByLabel('E-mail').fill(email);
   await page.getByLabel('Hasło').fill('haslo1234');
   await page.getByRole('button', { name: 'Załóż konto' }).click();
@@ -60,7 +60,7 @@ await test('guest progress is kept and uploaded on sign-up; status shows synced'
 
 await test('second device signs in and receives the progress', async () => {
   const { ctx, page } = await device();
-  await page.goto(`${BASE}/#/profile`);
+  await page.goto(`${BASE}/#/profile?s=konto`);
   await page.getByLabel('E-mail').fill(email);
   await page.getByLabel('Hasło').fill('haslo1234');
   await page.getByRole('button', { name: 'Zaloguj się' }).click();
@@ -72,7 +72,7 @@ await test('second device signs in and receives the progress', async () => {
 
 await test('wrong password shows a clear message', async () => {
   const { ctx, page } = await device();
-  await page.goto(`${BASE}/#/profile`);
+  await page.goto(`${BASE}/#/profile?s=konto`);
   await page.getByLabel('E-mail').fill(email);
   await page.getByLabel('Hasło').fill('zlehaslo99');
   await page.getByRole('button', { name: 'Zaloguj się' }).click();
@@ -84,7 +84,7 @@ await test('changes on two devices → conflict dialog → merge keeps both', as
   const a = await device();
   const b = await device();
   for (const d of [a, b]) {
-    await d.page.goto(`${BASE}/#/profile`);
+    await d.page.goto(`${BASE}/#/profile?s=konto`);
     await d.page.getByLabel('E-mail').fill(email);
     await d.page.getByLabel('Hasło').fill('haslo1234');
     await d.page.getByRole('button', { name: 'Zaloguj się' }).click();
@@ -111,7 +111,7 @@ await test('changes on two devices → conflict dialog → merge keeps both', as
 
 await test('sign out keeps local progress', async () => {
   const { ctx, page } = await device();
-  await page.goto(`${BASE}/#/profile`);
+  await page.goto(`${BASE}/#/profile?s=konto`);
   await page.getByLabel('E-mail').fill(email);
   await page.getByLabel('Hasło').fill('haslo1234');
   await page.getByRole('button', { name: 'Zaloguj się' }).click();

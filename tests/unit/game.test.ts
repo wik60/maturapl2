@@ -82,9 +82,18 @@ describe('map unlocking', () => {
     expect(isUnlocked(s, CHAPTERS[1].levels[0])).toBe(true);
     expect(levelStatus(s, CHAPTERS[0].levels[0])).toBe('completed');
   });
-  test('every map level references existing content', async () => {
-    const { getGroup } = await import('../../src/content');
-    for (const l of CHAPTERS.flatMap((c) => c.levels)) for (const g of l.groupIds) expect(getGroup(g)).toBeDefined();
+  test('every map level references existing content (groups or group#item units)', async () => {
+    const { resolveUnit } = await import('../../src/store/actions');
+    for (const l of CHAPTERS.flatMap((c) => c.levels)) {
+      if (l.kind !== 'exam') expect(l.groupIds.length).toBeGreaterThan(0);
+      for (const u of l.groupIds) expect(resolveUnit(u)).toBeDefined();
+    }
+  });
+  test('every chapter has at least 12 steps; lessons in chapters 1–7 never repeat a task set', () => {
+    for (const c of CHAPTERS) expect(c.levels.length).toBeGreaterThanOrEqual(12);
+    const lessonUnits = CHAPTERS.slice(0, 7).flatMap((c) => c.levels.filter((l) => !l.kind).flatMap((l) => l.groupIds));
+    expect(new Set(lessonUnits).size).toBe(lessonUnits.length);
+    for (const c of CHAPTERS) expect(c.levels.filter((l) => l.kind === 'review').length).toBe(3);
   });
 });
 

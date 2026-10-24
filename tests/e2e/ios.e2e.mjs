@@ -103,7 +103,7 @@ await test('iPhone Safari: install card with Share → "Dodaj do ekranu początk
   await page.getByRole('heading', { name: 'Cześć!' }).waitFor();
   assert(!(await page.getByRole('heading', { name: 'Dodaj grę do ekranu początkowego' }).isVisible()), 'card came back after hiding');
   // still reachable from the profile
-  await page.goto(`${BASE}/#/profile`);
+  await page.goto(`${BASE}/#/profile?s=aplikacja`);
   await page.getByRole('heading', { name: 'Dodaj grę do ekranu początkowego' }).waitFor();
   await ctx.close();
 });
@@ -113,7 +113,7 @@ await test('installed (standalone) app hides the install card', async () => {
   await page.goto(`${BASE}/#/`);
   await page.getByRole('heading', { name: 'Cześć!' }).waitFor();
   assert(!(await page.getByRole('heading', { name: 'Dodaj grę do ekranu początkowego' }).isVisible()), 'card shown in standalone');
-  await page.goto(`${BASE}/#/profile`);
+  await page.goto(`${BASE}/#/profile?s=aplikacja`);
   await page.getByText('Używasz Matura Quest jako aplikacji.').waitFor();
   await ctx.close();
 });

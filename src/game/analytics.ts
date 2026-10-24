@@ -118,13 +118,14 @@ const TAG_NAMES: Record<string, string> = {
   comparatives: 'stopniowanie przymiotników', quantifiers: 'określniki ilości (much/many…)', 'gerund-infinitive': 'gerund i bezokolicznik',
   'relative-clauses': 'zdania względne', 'reported-speech': 'mowa zależna', prepositions: 'przyimki', articles: 'przedimki', future: 'wyrażanie przyszłości',
   questions: 'tworzenie pytań', 'indirect-questions': 'pytania pośrednie', 'fixed-phrases': 'stałe wyrażenia', 'word-order': 'szyk zdania',
+  'to-be': 'to be, have got, there is/are', pronouns: 'zaimki i dzierżawcze',
 };
 export const tagName = (t: string) => TAG_NAMES[t] ?? t;
 
 const DRILL_FOR_TAG: Record<string, string> = {
   'present-perfect': 'sd-pp', 'past-simple': 'sd-past', 'past-continuous': 'sd-past', 'present-simple': 'sd-pres', conditionals: 'sd-cond',
   passive: 'sd-pass', modals: 'sd-mod', comparatives: 'sd-comp', quantifiers: 'sd-quant', 'gerund-infinitive': 'sd-ger',
-  'relative-clauses': 'sd-rel', 'reported-speech': 'sd-rel', articles: 'sd-art', future: 'sd-fut',
+  'relative-clauses': 'sd-rel', 'reported-speech': 'sd-rel', articles: 'sd-art', future: 'sd-fut', prepositions: 'sd-prep', pronouns: 'sd-pron', 'to-be': 'sd-be',
 };
 
 const SKILL_ROUTE: Record<string, string> = {

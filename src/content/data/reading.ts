@@ -50,6 +50,27 @@ export const readingMatchGroups: TaskGroup[] = [
       { id: 'rm2.4', kind: 'match', prompt: 'This person has been rewarded for their hobby.', answer: 'B', explanationPl: 'Kuba wygrał szkolny konkurs kulinarny.', evidence: 'I even won a cooking competition at school', distractorNotes: { C: 'Znajomi proszą Olę o ubrania, ale nie ma mowy o nagrodzie.' } },
     ],
   },
+  {
+    id: 'rm3', format: 'R_MATCH', title: 'Summer courses', topic: 'education', difficulty: 2, source: ORIGINAL, contentVersion: V,
+    instructionPl: 'Przeczytaj ogłoszenia A–E o kursach wakacyjnych. Do każdego pytania (1–4) dopasuj właściwe ogłoszenie. Uwaga: jedno ogłoszenie zostało podane dodatkowo i nie pasuje do żadnego pytania.',
+    stimulus: {
+      kind: 'texts',
+      texts: [
+        { label: 'A', title: 'Photography for Beginners', body: 'Two weeks in July, every morning. Bring your own camera or phone – we will show you how to take great pictures with any device. At the end, the best photos will be shown at the town gallery.' },
+        { label: 'B', title: 'Coding Camp', body: 'Learn to build your own simple game in five days. Laptops are provided. The course is taught in English by our teachers from Ireland, so it is also a chance to practise the language.' },
+        { label: 'C', title: 'Mountain Survival', body: 'Spend a week in the Tatras with a professional guide. You will learn how to read a map, build a shelter and cook outdoors. Participants must be at least 16 and need a doctor\'s note.' },
+        { label: 'D', title: 'Theatre Workshop', body: 'Shy? This is the course for you! Through games and short scenes you will become more confident speaking in front of others. No acting experience needed. The course is free for students from our town.' },
+        { label: 'E', title: 'Cooking Around the World', body: 'Every Saturday in August we cook dishes from a different country. You will take home everything you make, so bring a box! Places are limited to eight people.' },
+      ],
+    },
+    options: opts('Photography for Beginners', 'Coding Camp', 'Mountain Survival', 'Theatre Workshop', 'Cooking Around the World'),
+    items: [
+      { id: 'rm3.1', kind: 'match', prompt: 'Which course will let you improve a foreign language?', answer: 'B', explanationPl: 'Kurs programowania prowadzą nauczyciele z Irlandii po angielsku – okazja do praktyki języka.', evidence: 'taught in English… a chance to practise the language' },
+      { id: 'rm3.2', kind: 'match', prompt: 'Which course has a medical requirement?', answer: 'C', explanationPl: 'Na kurs przetrwania potrzebne jest zaświadczenie od lekarza.', evidence: 'need a doctor\'s note' },
+      { id: 'rm3.3', kind: 'match', prompt: 'Which course might help you feel less nervous with people?', answer: 'D', explanationPl: 'Warsztaty teatralne są dla nieśmiałych – pomagają nabrać pewności siebie.', evidence: 'you will become more confident speaking in front of others' },
+      { id: 'rm3.4', kind: 'match', prompt: 'On which course could your work be seen by the public?', answer: 'A', explanationPl: 'Najlepsze zdjęcia zostaną pokazane w miejskiej galerii.', evidence: 'the best photos will be shown at the town gallery', distractorNotes: { E: 'Potrawy zabierasz do domu – nikt ich publicznie nie ogląda.' } },
+    ],
+  },
 ];
 
 /* ------------------------------------------------------------------ */
@@ -157,6 +178,28 @@ export const readingMcGroups: TaskGroup[] = [
         { tag: 'intention', evidence: 'Please let us know which option you prefer.', text: { title: 'Email', body: 'Dear Mr Nowak,\nThank you for your order. Unfortunately, the blue model of the backpack is no longer available. We can send you the same backpack in green or black at the same price, or return your money. Please let us know which option you prefer.\nBest regards,\nShop Team' } }),
     ],
   },
+  {
+    id: 'rmc3', format: 'R_MC', title: 'Notes and messages', topic: 'everyday', difficulty: 2, source: ORIGINAL, contentVersion: V,
+    instructionPl: 'Przeczytaj teksty 1–5. W każdym zadaniu z podanych odpowiedzi wybierz właściwą, zgodną z treścią tekstu.',
+    stimulus: { kind: 'none' },
+    items: [
+      mc('rmc3.1', 'The purpose of the note is to', ['complain about noise.', 'invite neighbours to an event.', 'ask for help with a party.'], 'B',
+        'Autorzy zapraszają sąsiadów na grilla; uprzedzają też, że może być głośno – to nie skarga.',
+        { tag: 'intention', evidence: 'please come and join us', text: { title: 'Note on the door', body: 'Dear Neighbours, we are having a barbecue in the garden this Saturday from 6 p.m. It might be a bit noisy, so please come and join us instead of being annoyed! Bring your own drinks. – Anna and Piotr, flat 3' } }),
+      mc('rmc3.2', 'What do we learn about the library?', ['It will be closed on Sunday.', 'It is now open longer on some days.', 'It no longer lends DVDs.'], 'B',
+        'Od poniedziałku do piątku biblioteka jest otwarta do 21:00 zamiast do 19:00 – dłużej w niektóre dni.',
+        { tag: 'specific-info', evidence: 'until 9 p.m. instead of 7 p.m.', text: { title: 'City Library – new opening hours', body: 'From 1 October we are open Monday to Friday until 9 p.m. instead of 7 p.m. Weekend hours stay the same: Saturday 10–4, Sunday closed as before. DVDs can still be borrowed for one week.' } }),
+      mc('rmc3.3', 'Why did Leo write the message?', ['To say he has found something.', 'To apologise for being late.', 'To ask Tom to bring something.'], 'C',
+        'Leo prosi Toma, żeby przyniósł mu ładowarkę, którą zostawił w jego pokoju.',
+        { tag: 'intention', evidence: 'could you bring it to school tomorrow?', text: { title: 'Text message', body: 'Tom, I think I left my charger in your room yesterday – the white one, next to your bed. Could you bring it to school tomorrow? My phone is almost dead. Thanks! Leo' } }),
+      mc('rmc3.4', 'The writer of the review', ['would recommend the restaurant to families.', 'thinks the restaurant is too expensive.', 'was disappointed with the food.'], 'A',
+        'Autor poleca lokal rodzinom z dziećmi (kącik zabaw, menu dla dzieci); ceny ocenia jako rozsądne.',
+        { tag: 'inference', evidence: 'perfect if you have small children', text: { title: 'Online review', body: 'The pizza was fantastic and the prices are reasonable. There is a play corner and a special menu for kids, so it\'s perfect if you have small children. The only problem: we waited 40 minutes for a table. Book in advance!' } }),
+      mc('rmc3.5', 'What should students do before Friday?', ['Pay for the trip.', 'Choose a museum.', 'Return a signed form.'], 'C',
+        'Do piątku trzeba oddać formularz podpisany przez rodzica; płatność będzie w autokarze.',
+        { tag: 'specific-info', evidence: 'give the form signed by a parent to Ms Lis by Friday', text: { title: 'School notice', body: 'Class 3B trip to the Science Museum – Wednesday 15 May. Please give the form signed by a parent to Ms Lis by Friday. The ticket (25 zł) will be paid on the bus. Bring a packed lunch.' } }),
+    ],
+  },
 ];
 
 /* ------------------------------------------------------------------ */
@@ -204,6 +247,27 @@ export const readingSentenceGapGroups: TaskGroup[] = [
       { id: 'rsg2.2', kind: 'match', prompt: 'Luka 2', answer: 'B', explanationPl: 'Zdanie B konkretyzuje obawy rodziny („our family was worried”).', evidence: 'our family was worried' },
       { id: 'rsg2.3', kind: 'match', prompt: 'Luka 3', answer: 'C', explanationPl: '„In return” – w zamian za pomoc nastolatków (zdanie C) babcia piecze ciasta.', evidence: 'In return, she bakes cakes…' },
       { id: 'rsg2.4', kind: 'match', prompt: 'Luka 4', answer: 'D', explanationPl: 'Zdanie D dotyczy obserwujących z mediów społecznościowych.', evidence: 'thousands of followers', distractorNotes: { E: 'Zaprzecza treści – babcia dopiero zaczęła jeździć.' } },
+    ],
+  },
+  {
+    id: 'rsg3', format: 'R_SENTENCE_GAP', title: 'A phone-free week', topic: 'technology', difficulty: 3, source: ORIGINAL, contentVersion: V,
+    instructionPl: 'Przeczytaj tekst, z którego usunięto cztery zdania. Wpisz w każdą lukę (1–4) literę, którą oznaczono brakujące zdanie (A–E). Uwaga: jedno zdanie zostało podane dodatkowo i nie pasuje do żadnej luki.',
+    stimulus: {
+      kind: 'text', title: 'MY PHONE-FREE WEEK',
+      body: 'Last month our teacher challenged us to spend a week without smartphones. Most of my classmates laughed, but I decided to try. [[1]] I kept reaching for my pocket and checking for messages that weren\'t there. By Wednesday, however, things started to change. [[2]] I read a whole novel in three evenings, which I hadn\'t done for years. I also noticed that I was sleeping better. [[3]] My friends couldn\'t send me photos of the homework, and I missed a party invitation because it was only posted online. [[4]] Now I keep my phone in another room when I study, and I check social media only once a day.',
+    },
+    options: opts(
+      'The first two days were really hard.',
+      'Suddenly I had much more free time.',
+      'Of course, not everything was easy.',
+      'In the end, I learned a lot about my habits.',
+      'My parents bought me a new phone as a reward.',
+    ),
+    items: [
+      { id: 'rsg3.1', kind: 'match', prompt: 'Luka 1', answer: 'A', explanationPl: 'Po luce opis trudności: ciągłe sięganie do kieszeni – to początek, „pierwsze dwa dni były trudne”.', evidence: 'I kept reaching for my pocket' },
+      { id: 'rsg3.2', kind: 'match', prompt: 'Luka 2', answer: 'B', explanationPl: 'Zdanie B tłumaczy, skąd czas na przeczytanie powieści.', evidence: 'I read a whole novel in three evenings' },
+      { id: 'rsg3.3', kind: 'match', prompt: 'Luka 3', answer: 'C', explanationPl: 'Po luce pojawiają się problemy – zdanie C zapowiada zmianę tonu („nie wszystko było łatwe”).', evidence: 'My friends couldn\'t send me photos of the homework' },
+      { id: 'rsg3.4', kind: 'match', prompt: 'Luka 4', answer: 'D', explanationPl: 'Zakończenie: autor wyciąga wnioski i zmienia nawyki („Now I keep my phone…”).', evidence: 'Now I keep my phone in another room', distractorNotes: { E: 'Nic w tekście nie mówi o nagrodzie ani nowym telefonie.' } },
     ],
   },
 ];
