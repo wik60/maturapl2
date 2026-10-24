@@ -72,6 +72,34 @@ function AddIcon() {
   );
 }
 
+function Steps({ platform }: { platform: Platform }) {
+  return (
+    <>
+      {platform === 'ios-safari' && (
+        <ol className="install-steps">
+          <li>Stuknij <strong>Udostępnij</strong> <ShareIcon /> w pasku Safari. W nowszym iOS może być ukryty pod przyciskiem <strong>•••</strong>.</li>
+          <li>Przewiń listę i wybierz <strong>Dodaj do ekranu początkowego</strong> <AddIcon />.</li>
+          <li>Stuknij <strong>Dodaj</strong> w prawym górnym rogu.</li>
+        </ol>
+      )}
+      {platform === 'ios-other' && (
+        <ol className="install-steps">
+          <li>Stuknij <strong>Udostępnij</strong> <ShareIcon /> (w Chrome: przy pasku adresu).</li>
+          <li>Wybierz <strong>Dodaj do ekranu początkowego</strong> <AddIcon />.</li>
+          <li>Jeśli tej opcji nie ma, otwórz stronę w Safari i zrób to tam.</li>
+        </ol>
+      )}
+      {platform === 'ios-inapp' && (
+        <p className="notice" style={{ margin: 0 }}>Ta strona jest otwarta wewnątrz innej aplikacji. Stuknij menu (•••) i wybierz <strong>Otwórz w Safari</strong>, a potem dodaj grę do ekranu początkowego.</p>
+      )}
+      {platform === 'other' && (
+        <p className="small" style={{ margin: 0 }}>Otwórz menu przeglądarki i wybierz <strong>Zainstaluj aplikację</strong> lub <strong>Dodaj do ekranu głównego</strong>.</p>
+      )}
+
+    </>
+  );
+}
+
 export function useInstallState() {
   const [, force] = useState(0);
   useEffect(() => {
@@ -87,6 +115,7 @@ export function InstallCard({ place }: { place: 'home' | 'profile' }) {
   const sync = useSyncView();
   const [dismissed, setDismissed] = useState(readDismissed);
   const [installing, setInstalling] = useState(false);
+  const [howOpen, setHowOpen] = useState(false);
 
   if (st.embedded) return null;
   if (st.installed) {
@@ -114,38 +143,44 @@ export function InstallCard({ place }: { place: 'home' | 'profile' }) {
     }
   };
 
+  if (place === 'home') {
+    return (
+      <>
+        <section className="card install-banner" aria-labelledby="inst-home">
+          <span className="ti" aria-hidden="true"><AddIcon /></span>
+          <div><h2 id="inst-home" style={{ fontSize: '0.95rem', margin: 0, fontFamily: 'var(--font-ui)' }}>Dodaj grę do ekranu początkowego</h2>Pełny ekran i nauka offline.</div>
+          {st.platform === 'prompt'
+            ? <button className="btn sm" onClick={install} disabled={installing}>Zainstaluj</button>
+            : <button className="btn sm" onClick={() => setHowOpen(true)}>Jak?</button>}
+          <button className="btn flat icon" onClick={dismiss} aria-label="Ukryj tę wskazówkę"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={2.4} strokeLinecap="round" aria-hidden="true"><path d="M6 6l12 12M18 6 6 18" /></svg></button>
+        </section>
+        {howOpen && (
+          <>
+            <div className="sheet-backdrop" onClick={() => setHowOpen(false)} />
+            <div className="sheet" role="dialog" aria-modal="true" aria-labelledby="inst-how">
+              <div className="grab" />
+              <h2 id="inst-how">Dodaj grę do ekranu początkowego</h2>
+              <Steps platform={st.platform} />
+              {isIOS() && <p className="small muted" style={{ margin: '0.7rem 0' }}>Aplikacja z ekranu początkowego ma osobny zapis niż Safari.{sync.email ? ' Zaloguj się w niej, a postęp przeniesie się sam.' : ' Żeby zabrać postęp, najpierw załóż konto w profilu, a potem zaloguj się w aplikacji.'}</p>}
+              <button className="btn block" onClick={() => setHowOpen(false)}>Rozumiem</button>
+            </div>
+          </>
+        )}
+      </>
+    );
+  }
+
   return (
     <section className="card install" aria-labelledby={`inst-${place}`}>
       <div className="row between">
         <h2 id={`inst-${place}`} style={{ margin: 0 }}>Dodaj grę do ekranu początkowego</h2>
-        {place === 'home' && <button className="btn quiet sm" onClick={dismiss} aria-label="Ukryj tę wskazówkę">Ukryj</button>}
       </div>
       <p className="small" style={{ margin: '0.4rem 0 0.6rem' }}>Otworzysz ją jednym dotknięciem, na pełnym ekranie, także bez internetu.</p>
 
-      {st.platform === 'ios-safari' && (
-        <ol className="install-steps">
-          <li>Stuknij <strong>Udostępnij</strong> <ShareIcon /> w pasku Safari. W nowszym iOS może być ukryty pod przyciskiem <strong>•••</strong>.</li>
-          <li>Przewiń listę i wybierz <strong>Dodaj do ekranu początkowego</strong> <AddIcon />.</li>
-          <li>Stuknij <strong>Dodaj</strong> w prawym górnym rogu.</li>
-        </ol>
-      )}
-      {st.platform === 'ios-other' && (
-        <ol className="install-steps">
-          <li>Stuknij <strong>Udostępnij</strong> <ShareIcon /> (w Chrome: przy pasku adresu).</li>
-          <li>Wybierz <strong>Dodaj do ekranu początkowego</strong> <AddIcon />.</li>
-          <li>Jeśli tej opcji nie ma, otwórz stronę w Safari i zrób to tam.</li>
-        </ol>
-      )}
-      {st.platform === 'ios-inapp' && (
-        <p className="notice" style={{ margin: 0 }}>Ta strona jest otwarta wewnątrz innej aplikacji. Stuknij menu (•••) i wybierz <strong>Otwórz w Safari</strong>, a potem dodaj grę do ekranu początkowego.</p>
-      )}
+      <Steps platform={st.platform} />
       {st.platform === 'prompt' && (
         <button className="btn" onClick={install} disabled={installing}>Zainstaluj aplikację</button>
       )}
-      {st.platform === 'other' && (
-        <p className="small" style={{ margin: 0 }}>Otwórz menu przeglądarki i wybierz <strong>Zainstaluj aplikację</strong> lub <strong>Dodaj do ekranu głównego</strong>.</p>
-      )}
-
       {isIOS() && (
         <p className="small muted" style={{ margin: '0.6rem 0 0' }}>
           Aplikacja z ekranu początkowego ma osobny zapis niż Safari.

@@ -91,9 +91,11 @@ await test('iPhone Safari: install card with Share → "Dodaj do ekranu początk
   const { ctx, page } = await iphone();
   await page.goto(`${BASE}/#/`);
   await page.getByRole('heading', { name: 'Dodaj grę do ekranu początkowego' }).waitFor();
-  assert(await page.getByText('Dodaj do ekranu początkowego', { exact: true }).isVisible(), 'step missing');
+  await page.getByRole('button', { name: 'Jak?' }).tap();
+  await page.getByText('Dodaj do ekranu początkowego', { exact: true }).waitFor();
   assert(await page.getByText(/osobny zapis niż Safari/).isVisible(), 'separate-storage note missing');
   SHOTS && await page.screenshot({ path: `${SHOTS}/ios-install.png` });
+  await page.getByRole('button', { name: 'Rozumiem' }).tap();
   await page.getByRole('button', { name: 'Ukryj tę wskazówkę' }).tap();
   await page.reload();
   await page.getByRole('heading', { name: 'Cześć!' }).waitFor();

@@ -47,6 +47,8 @@ export interface PracticeSession {
   startedAt: number;
   finishedAt?: number;
   listeningFallback?: Record<string, boolean>;
+  /** XP earned by answers in this session (shown on the summary). */
+  xpEarned?: number;
 }
 
 export interface ExamResult {

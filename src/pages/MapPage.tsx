@@ -1,4 +1,5 @@
-import { CHAPTERS, isUnlocked, type Level, levelStatus, type LevelStatus } from '../game/map';
+import { useRef, useState } from 'react';
+import { CHAPTERS, isUnlocked, type Level, levelStatus, type LevelStatus, nextLevel } from '../game/map';
 import { navigate } from '../router/router';
 import { startSession } from '../store/actions';
 import { useAppState, useStore } from '../store/useStore';
@@ -13,64 +14,111 @@ const STATUS_PL: Record<LevelStatus, string> = {
   mastered: 'Opanowany',
 };
 
+/** One colour per chapter – each region of the map has its own identity. */
+const CHAPTER_COLORS = ['#2a45d6', '#0d8a82', '#7440cf', '#d0601a', '#1c9454', '#c1377a', '#1b78b0', '#b2402a'];
+/** Horizontal offsets of the zigzag path (px). */
+const ZIG = [0, 62, 78, 30, -40, -78, -50, 10];
+
+let lastChapter: number | null = null;
+
 export default function MapPage() {
   const state = useAppState();
   const store = useStore();
+  const current = nextLevel(state);
+  const startCh = Math.max(0, CHAPTERS.findIndex((c) => c.id === current?.chapter));
+  const [ch, setCh] = useState(lastChapter ?? startCh);
+  const [dir, setDir] = useState<'next' | 'prev' | ''>('');
+  const [preview, setPreview] = useState<Level | null>(null);
+  const touch = useRef<number | null>(null);
 
-  const open = (l: Level, chapterName: string) => {
-    if (!isUnlocked(state, l)) return;
+  const go = (i: number) => {
+    if (i < 0 || i >= CHAPTERS.length || i === ch) return;
+    setDir(i > ch ? 'next' : 'prev');
+    setCh(i);
+    lastChapter = i;
+  };
+
+  const c = CHAPTERS[ch];
+  const color = CHAPTER_COLORS[ch % CHAPTER_COLORS.length];
+
+  const start = (l: Level) => {
+    setPreview(null);
     if (l.kind === 'exam') return navigate('/exam');
-    const id = store.update((s, now) => startSession(s, now, { kind: 'map', title: `${chapterName}: ${l.titlePl}`, units: l.groupIds, levelId: l.id }));
+    const id = store.update((s, now) => startSession(s, now, { kind: 'map', title: `${c.namePl}: ${l.titlePl}`, units: l.groupIds, levelId: l.id }));
     navigate(`/session/${id}`);
   };
 
-  const done = Object.values(state.levels).filter((l) => l.completedAt).length;
-  const total = CHAPTERS.reduce((s, c) => s + c.levels.length, 0);
+  const done = c.levels.filter((l) => state.levels[l.id]?.completedAt).length;
+  const chapterDone = (i: number) => CHAPTERS[i].levels.every((l) => state.levels[l.id]?.completedAt);
+  const p = preview ? state.levels[preview.id] : undefined;
+  const pst = preview ? levelStatus(state, preview) : 'locked';
 
   return (
-    <div>
-      <h1>Mapa przygody</h1>
-      <p className="muted">Zaliczone poziomy: {done}/{total}. Poziom zaliczasz przy 70% poprawnych odpowiedzi, opanowujesz przy 90%. Rozdziały to struktura gry, a nie oficjalny podział CKE.</p>
-      {CHAPTERS.map((c, ci) => (
-        <section key={c.id} className="chapter" aria-labelledby={`ch-${c.id}`}>
-          <header>
-            <h2 id={`ch-${c.id}`}>{ci + 1}. {c.namePl}</h2>
-            <small lang="en">{c.nameEn}</small>
-          </header>
-          <p className="small muted" style={{ margin: 0 }}>{c.descPl}</p>
-          <ol className="path" style={{ listStyle: 'none', paddingLeft: 0 }}>
-            {c.levels.map((l, li) => {
-              const st = levelStatus(state, l);
-              const p = state.levels[l.id];
-              const locked = st === 'locked';
-              return (
-                <li key={l.id} className={`node ${st}`}>
-                  <span className="node-dot" aria-hidden="true">
-                    {st === 'locked' ? <Icon name="lock" size={20} /> : st === 'mastered' ? <Icon name="star" size={22} /> : st === 'completed' ? <Icon name="check" size={22} /> : li + 1}
-                  </span>
-                  <button
-                    type="button"
-                    className="card node-body"
-                    style={{ textAlign: 'left', font: 'inherit', cursor: locked ? 'not-allowed' : 'pointer', width: '100%' }}
-                    onClick={() => open(l, c.namePl)}
-                    aria-disabled={locked}
-                    aria-label={`${l.titlePl}. ${STATUS_PL[st]}. ${l.objectivePl}${locked ? ' Najpierw zalicz poprzedni poziom.' : ''}`}
-                  >
-                    <div className="row between">
-                      <h3>{l.titlePl}</h3>
-                      <span className={`badge ${st === 'completed' || st === 'mastered' ? 'good' : ''}`}>{STATUS_PL[st]}</span>
-                    </div>
-                    <p className="small" style={{ margin: 0 }}>{l.objectivePl}</p>
-                    <p className="small muted" style={{ margin: '0.25rem 0 0' }}>
-                      {locked ? 'Odblokujesz po zaliczeniu poprzedniego poziomu.' : `Nagroda: ${l.xp} XP${p?.attempts ? ` · najlepszy wynik ${pct(p.best)}` : ''}`}
-                    </p>
-                  </button>
-                </li>
-              );
-            })}
-          </ol>
-        </section>
-      ))}
+    <div
+      className="map"
+      style={{ '--ch': color } as Record<string, string>}
+      onTouchStart={(e: { touches: { clientX: number }[] }) => { touch.current = e.touches[0].clientX; }}
+      onTouchEnd={(e: { changedTouches: { clientX: number }[] }) => {
+        if (touch.current === null) return;
+        const dx = e.changedTouches[0].clientX - touch.current;
+        touch.current = null;
+        if (Math.abs(dx) > 60) go(ch + (dx < 0 ? 1 : -1));
+      }}
+    >
+      <header className="chapter-head">
+        <button className="btn icon sm" onClick={() => go(ch - 1)} disabled={ch === 0} aria-label="Poprzedni rozdział"><Icon name="back" /></button>
+        <div className="t">
+          <small>Rozdział {ch + 1} z {CHAPTERS.length} · {done}/{c.levels.length} zaliczone</small>
+          <h1>{c.namePl}</h1>
+        </div>
+        <button className="btn icon sm" onClick={() => go(ch + 1)} disabled={ch === CHAPTERS.length - 1} aria-label="Następny rozdział"><span style={{ display: 'inline-flex', transform: 'scaleX(-1)' }}><Icon name="back" /></span></button>
+      </header>
+      <div className="chapter-dots" aria-hidden="true">
+        {CHAPTERS.map((x, i) => <span key={x.id} className={`${i === ch ? 'on' : ''} ${chapterDone(i) ? 'done' : ''}`} />)}
+      </div>
+
+      <ol className={`path ${dir ? `slide-${dir}` : ''}`} key={c.id} aria-label={`Poziomy: ${c.namePl}`}>
+        {c.levels.map((l, li) => {
+          const st = levelStatus(state, l);
+          const locked = st === 'locked';
+          const isCurrent = current?.id === l.id;
+          return (
+            <li key={l.id} className={`node ${st} ${isCurrent ? 'current' : ''}`} style={{ '--x': `${ZIG[li % ZIG.length]}px` } as Record<string, string>}>
+              {isCurrent && <span className="start-bubble" aria-hidden="true">{st === 'in-progress' ? 'DALEJ' : 'START'}</span>}
+              <button
+                type="button"
+                className="node-btn"
+                onClick={() => isUnlocked(state, l) && setPreview(l)}
+                aria-disabled={locked}
+                aria-label={`${l.titlePl}. ${STATUS_PL[st]}.${locked ? ' Najpierw zalicz poprzedni poziom.' : ''}`}
+              >
+                <Icon name={locked ? 'lock' : st === 'mastered' ? 'star' : st === 'completed' ? 'check' : l.kind === 'exam' ? 'exam' : 'play'} />
+              </button>
+              <span className="lbl" aria-hidden="true">{l.titlePl}</span>
+            </li>
+          );
+        })}
+      </ol>
+      <p className="map-foot">{c.descPl}</p>
+
+      {preview && (
+        <>
+          <div className="sheet-backdrop" onClick={() => setPreview(null)} />
+          <div className="sheet" role="dialog" aria-modal="true" aria-labelledby="lvl-t" style={{ '--ch': color } as Record<string, string>}>
+            <div className="grab" />
+            <div className="row between" style={{ marginBottom: '0.3rem' }}>
+              <span className="badge">{STATUS_PL[pst]}</span>
+              <span className="small muted">Nagroda: {preview.xp} XP{p?.attempts ? ` · najlepiej ${pct(p.best)}` : ''}</span>
+            </div>
+            <h2 id="lvl-t">{preview.titlePl}</h2>
+            <p>{preview.objectivePl}</p>
+            <p className="small muted">Zaliczenie od 70%, opanowanie od 90% poprawnych odpowiedzi.</p>
+            <button className="btn block" style={{ '--face': color, '--edge-c': `color-mix(in srgb, ${color} 62%, #000)` } as Record<string, string>} onClick={() => start(preview)}>
+              {preview.kind === 'exam' ? 'Przejdź do arkusza' : p?.completedAt ? 'Powtórz poziom' : 'Zacznij'}
+            </button>
+          </div>
+        </>
+      )}
     </div>
   );
 }

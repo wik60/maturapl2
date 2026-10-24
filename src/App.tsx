@@ -105,17 +105,20 @@ export function App() {
     setToastSound(state.settings.sound);
   }, [state.settings.textSize, state.settings.motion, state.settings.sound, ink]);
 
-  const focusMode = (r.segments[0] === 'exam' && r.segments[1] && r.segments[2] !== 'results');
+  const examFocus = !!(r.segments[0] === 'exam' && r.segments[1] && r.segments[2] !== 'results');
+  const lessonMode = r.segments[0] === 'session';
+  const focusMode = examFocus || lessonMode;
+  const screenKey = r.segments.slice(0, 2).join('/');
 
   return (
-    <div className={`app ${focusMode ? 'focus' : ''}`}>
+    <div className={`app ${examFocus ? 'focus' : ''} ${lessonMode ? 'lesson-mode' : ''}`}>
       <a href="#main" className="sr-only" onClick={(e) => { e.preventDefault(); document.getElementById('main')?.focus(); }}>Przejdź do treści</a>
       {!online && <div className="offline" role="status">Jesteś offline. Zapisane ćwiczenia działają, a postęp zapisuje się na tym urządzeniu.</div>}
       {!focusMode && (
         <header className="topbar">
           <Link to="/" className="brand" aria-label={`${APP_NAME} – start`}><Mark />{APP_NAME}</Link>
           <span className="spacer" />
-          <span className="chip" title="Seria dni nauki"><Icon name="flame" size={16} />{streak}<span className="sr-only"> dni serii</span></span>
+          <span className={`chip flame ${streak ? '' : 'cold'}`} title="Seria dni nauki"><Icon name="flame" size={18} />{streak}<span className="sr-only"> dni serii</span></span>
           {sv.email && (
             <Link to="/profile" className={`chip ${sv.status === 'error' || sv.status === 'conflict' ? 'bad' : ''}`} aria-label={`Synchronizacja: ${sv.status === 'synced' ? 'zsynchronizowano' : sv.status}`}>
               <Icon name="cloud" size={16} />{sv.status === 'synced' ? '' : sv.status === 'syncing' || sv.status === 'pending' ? '…' : '!'}
@@ -125,10 +128,10 @@ export function App() {
         </header>
       )}
       <main id="main" tabIndex={-1} className={r.segments[0] === 'about' ? 'wide' : ''}>
-        {store.loadMessage && r.segments.length === 0 && <div className="notice" role="status" style={{ marginBottom: '0.8rem' }}>{store.loadMessage}</div>}
+        {store.loadMessage && r.segments.length === 0 && <div className="notice" role="status" style={{ margin: '0.5rem 0 0.8rem' }}>{store.loadMessage}</div>}
         <Boundary>
-          <Suspense fallback={<p className="muted" role="status">Wczytywanie…</p>}>
-            <Page />
+          <Suspense fallback={<p className="loading" role="status">Wczytywanie…</p>}>
+            <div className={lessonMode ? undefined : "screen"} key={screenKey}><Page /></div>
           </Suspense>
         </Boundary>
       </main>
@@ -136,7 +139,7 @@ export function App() {
         <nav className="bottomnav" aria-label="Nawigacja główna">
           {NAV.map((n) => (
             <Link key={n.to} to={n.to} aria-current={n.match(r.segments[0]) ? 'page' : undefined}>
-              <Icon name={n.icon} />
+              <span className="navicon"><Icon name={n.icon} /></span>
               {n.label}
             </Link>
           ))}

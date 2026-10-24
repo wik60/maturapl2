@@ -26,11 +26,20 @@ async function device() {
 const st = (page) => page.evaluate(() => globalThis.__mq.get());
 const email = `ola${Date.now()}@test.pl`;
 
+/** Lesson mode: one question per screen; null = "Nie wiem". */
+async function steps(page, picks) {
+  for (const pick of picks) {
+    if (pick) { await page.getByRole('radio', { name: pick }).click(); await page.getByRole('button', { name: 'Sprawdź' }).click(); }
+    else await page.getByRole('button', { name: 'Nie wiem' }).click();
+    const next = page.getByRole('button', { name: /^(Dalej|Zakończ)$/ });
+    await next.waitFor();
+    await page.waitForTimeout(480);
+    await next.click();
+  }
+}
 async function answerFd1(page, opts) {
   await page.goto(`${BASE}/#/session/new?groups=fd1&title=Sync`);
-  for (const o of opts) await page.getByRole('radio', { name: o }).click();
-  await page.getByRole('button', { name: 'Sprawdź' }).click();
-  await page.getByText(/Dobrze!|Niestety/).first().waitFor();
+  await steps(page, opts);
 }
 
 await test('guest progress is kept and uploaded on sign-up; status shows synced', async () => {
@@ -83,15 +92,11 @@ await test('changes on two devices → conflict dialog → merge keeps both', as
   }
   // A answers and syncs
   await a.page.goto(`${BASE}/#/session/new?groups=fd2&title=A`);
-  await a.page.getByRole('radio', { name: /sorry to hear/ }).click();
-  await a.page.getByRole('button', { name: 'Sprawdź' }).click();
-  await a.page.getByRole('button', { name: 'Sprawdź mimo to' }).click();
+  await steps(a.page, [/sorry to hear/, null, null]);
   await a.page.evaluate(() => globalThis.__mqSync.syncNow());
   // B answers something else, then syncs → conflict
   await b.page.goto(`${BASE}/#/session/new?groups=fd3&title=B`);
-  await b.page.getByRole('radio', { name: /changing rooms/ }).click();
-  await b.page.getByRole('button', { name: 'Sprawdź' }).click();
-  await b.page.getByRole('button', { name: 'Sprawdź mimo to' }).click();
+  await steps(b.page, [/changing rooms/, null, null]);
   await b.page.evaluate(() => globalThis.__mqSync.syncNow());
   await b.page.getByRole('heading', { name: 'Dwie różne wersje postępu' }).waitFor();
   SHOTS && await b.page.screenshot({ path: `${SHOTS}/sync-conflict.png` });

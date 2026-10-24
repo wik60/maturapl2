@@ -152,6 +152,7 @@ export function submitUnit(state: AppState, now: number, sessionId: string, unit
   ev.any = answered;
   if (state.attempts.length > MAX_ATTEMPTS) state.attempts = state.attempts.slice(-MAX_ATTEMPTS);
   const reward = finishRewards(state, now, before, ev, emptyReward());
+  s.xpEarned = (s.xpEarned ?? 0) + reward.xp;
   return { results: sc.results, points: sc.points, max: sc.max, reward, already: false };
 }
 

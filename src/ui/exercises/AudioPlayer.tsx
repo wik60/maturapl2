@@ -15,11 +15,13 @@ export function useAudioAvailability(): AudioAvailability {
   return a;
 }
 
+const WAVE = Array.from({ length: 28 }, (_, i) => 30 + Math.round(55 * Math.abs(Math.sin(i * 1.7) * Math.cos(i * 0.6))));
+
 // Only one clip plays at a time across the page.
 let activeStop: (() => void) | null = null;
 
 export function AudioPlayer({
-  clip, rate, maxPlays, plays = 0, onPlayed, showTranscript, compact,
+  clip, rate, maxPlays, plays = 0, onPlayed, showTranscript, compact, quietUnavailable,
 }: {
   clip: AudioClip;
   rate: number;
@@ -28,6 +30,8 @@ export function AudioPlayer({
   onPlayed?: () => void;
   showTranscript?: boolean;
   compact?: boolean;
+  /** The lesson shows its own notice with a transcript option. */
+  quietUnavailable?: boolean;
 }) {
   const avail = useAudioAvailability();
   const [state, setState] = useState<'idle' | 'playing' | 'error'>('idle');
@@ -63,7 +67,7 @@ export function AudioPlayer({
 
   return (
     <div className="stack">
-      <div className="player" aria-label={`Odtwarzacz: ${clip.label}`}>
+      <div className={`player ${state === 'playing' ? 'playing' : ''}`} aria-label={`Odtwarzacz: ${clip.label}`}>
         <button
           type="button"
           className="btn play"
@@ -75,10 +79,8 @@ export function AudioPlayer({
         </button>
         <div>
           <strong>{clip.label}</strong>
-          <div style={{ margin: '0.35rem 0' }}>
-            <div className="progress" role="progressbar" aria-label="Postęp nagrania" aria-valuemin={0} aria-valuemax={100} aria-valuenow={Math.round(progress * 100)}>
-              <span style={{ width: `${progress * 100}%` }} />
-            </div>
+          <div className="wave" role="progressbar" aria-label="Postęp nagrania" aria-valuemin={0} aria-valuemax={100} aria-valuenow={Math.round(progress * 100)}>
+            {WAVE.map((h, i) => <i key={i} className={state === 'playing' && i / WAVE.length <= progress + 0.02 ? 'on' : progress >= 1 && state !== 'playing' ? 'on' : ''} style={{ height: `${h}%`, '--i': i } as Record<string, string | number>} />)}
           </div>
           <div className="meta">
             {avail === 'checking' && !clip.url && 'Sprawdzam dostępność głosu…'}
@@ -89,7 +91,7 @@ export function AudioPlayer({
           </div>
         </div>
       </div>
-      {!usable && avail !== 'checking' && (
+      {!usable && avail !== 'checking' && !quietUnavailable && (
         <div className="notice bad" role="alert">
           <strong>Nagranie jest niedostępne.</strong>{' '}
           {avail === 'unsupported'

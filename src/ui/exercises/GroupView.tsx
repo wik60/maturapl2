@@ -25,15 +25,15 @@ interface Props {
 }
 
 /** Original 1-based position of an item inside its full group (for gap numbers). */
-function fullGroup(g: TaskGroup) {
+export function fullGroup(g: TaskGroup) {
   return getGroup(g.id) ?? g;
 }
 
-function optionText(opts: Option[], id: string) {
+export function optionText(opts: Option[], id: string) {
   return opts.find((o) => o.id === id)?.text ?? '';
 }
 
-function GapText({ body, group, answers }: { body: string; group: TaskGroup; answers: Record<string, string> }) {
+export function GapText({ body, group, answers, current }: { body: string; group: TaskGroup; answers: Record<string, string>; current?: string }) {
   const full = fullGroup(group);
   const inView = new Set(group.items.map((i) => i.id));
   const parts = body.split(/(\[\[\d+\]\])/g);
@@ -53,7 +53,7 @@ function GapText({ body, group, answers }: { body: string; group: TaskGroup; ans
         const a = answers[item.id];
         const shown = !a ? '' : item.kind === 'mc' ? optionText(item.options, a) : item.kind === 'match' ? a : a;
         return (
-          <span key={i} className={`gapmark ${a ? 'filled' : ''}`} aria-label={`luka ${n}${a ? `: ${shown}` : ''}`}>
+          <span key={i} className={`gapmark ${a ? 'filled' : ''} ${current === item.id ? 'current' : ''}`} data-gap={item.id} aria-label={`luka ${n}${a ? `: ${shown}` : ''}`}>
             <small>{n}</small>
             {shown || '      '}
           </span>
@@ -124,7 +124,7 @@ function Feedback({ group, item, result }: { group: TaskGroup; item: Item; resul
   );
 }
 
-function McInput({ item, value, onChange, result, name }: { item: Item & { kind: 'mc' }; value: string; onChange: (v: string) => void; result?: ItemResult; name: string }) {
+export function McInput({ item, value, onChange, result, name }: { item: Item & { kind: 'mc' }; value: string; onChange: (v: string) => void; result?: ItemResult; name: string }) {
   const checked = !!result;
   return (
     <div className="options" role="radiogroup" aria-labelledby={`${name}-q`}>
@@ -153,7 +153,7 @@ function McInput({ item, value, onChange, result, name }: { item: Item & { kind:
             id={`${name}-${o.id}`}
           >
             <span className="bubble" aria-hidden="true">{o.id}</span>
-            <span lang="en">{o.text}</span>
+            <span className="otext" lang="en">{o.text}</span>
           </button>
         );
       })}
@@ -178,7 +178,7 @@ function LetterInput({ options, value, onChange, result, answer, label }: { opti
   );
 }
 
-function OpenInput({ item, value, onChange, result, label, group }: { item: OpenItem; value: string; onChange: (v: string) => void; result?: ItemResult; label: string; group: TaskGroup }) {
+export function OpenInput({ item, value, onChange, result, label, group }: { item: OpenItem; value: string; onChange: (v: string) => void; result?: ItemResult; label: string; group: TaskGroup }) {
   const cls = result ? (result.verdict === 'correct' ? 'is-correct' : 'is-wrong') : '';
   const isGramm = group.format === 'U_GRAMMATICALISE' || group.format === 'U_TRANSLATE_OPEN';
   return (
@@ -198,7 +198,7 @@ function OpenInput({ item, value, onChange, result, label, group }: { item: Open
         enterKeyHint="next"
       />
       {item.after && <span className="ctx">{item.after}</span>}
-      {item.maxWords && !result && <span className="small muted" lang="pl" style={{ width: '100%' }}>Maks. {item.maxWords} {item.maxWords === 1 ? 'wyraz' : 'wyrazów'}.</span>}
+      {item.maxWords && !result && <span className="hintline" lang="pl">Maks. {item.maxWords} {item.maxWords === 1 ? 'wyraz' : 'wyrazów'}.</span>}
     </div>
   );
 }

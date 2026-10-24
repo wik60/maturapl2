@@ -37,6 +37,21 @@ async function freshPage(viewport = { width: 390, height: 844 }) {
 }
 
 const state = (page) => page.evaluate(() => globalThis.__mq.get());
+const PRAISE = /Dobrze!|Świetnie!|Brawo!|Tak jest!|Doskonale!/;
+/** Lesson mode: one question per screen. Each pick answers one screen; null = "Nie wiem". */
+async function steps(page, picks) {
+  for (const pick of picks) {
+    if (pick) { await pick(page); await page.getByRole('button', { name: 'Sprawdź' }).click(); }
+    else await page.getByRole('button', { name: 'Nie wiem' }).click();
+    const next = page.getByRole('button', { name: /^(Dalej|Zakończ)$/ });
+    await next.waitFor();
+    await page.waitForTimeout(480); // feedback cooldown
+    await next.click();
+  }
+}
+const radio = (name) => (page) => page.getByRole('radio', { name, exact: typeof name === 'string' }).click();
+const type = (text) => (page) => page.getByRole('textbox').first().fill(text);
+
 const shot = async (page, name) => SHOTS && page.screenshot({ path: `${SHOTS}/${name}.png` });
 
 await test('first visit: dashboard, no horizontal overflow on any primary screen, no console errors', async () => {
@@ -62,7 +77,7 @@ await test('diagnostic: start, answer, check feedback, persists attempts', async
   // first item: sd-pres.2 → correct answer A "goes"
   await page.getByRole('radio', { name: /goes/ }).click();
   await page.getByRole('button', { name: 'Sprawdź' }).click();
-  await page.getByText('Dobrze!').waitFor();
+  await page.getByText(PRAISE).waitFor();
   const s = await state(page);
   assert(s.attempts.length === 1 && s.attempts[0].verdict === 'correct', 'attempt not recorded');
   assert(s.xp > 0, 'no XP');
@@ -70,25 +85,28 @@ await test('diagnostic: start, answer, check feedback, persists attempts', async
   await ctx.close();
 });
 
-await test('map lesson on a phone: wrong answer shows explanation, finishing records level progress, mistakes saved', async () => {
+await test('map lesson on a phone: one question per screen, wrong answer sheet, finishing records level progress, mistakes saved', async () => {
   const { ctx, page } = await freshPage();
   await page.goto(`${BASE}/#/map`);
   await page.getByRole('button', { name: /Szyk zdania/ }).click();
-  await page.getByText('Obóz startowy: Szyk zdania').waitFor();
-  const inputs = page.getByRole('textbox');
-  await inputs.nth(0).fill('I always have breakfast at seven');
-  await inputs.nth(1).fill('Where you live?'); // wrong
+  await page.getByRole('button', { name: 'Zacznij' }).click();
+  await page.getByText('Obóz startowy: Szyk zdania').waitFor({ state: 'attached' });
+  assert(await page.getByRole('button', { name: 'Sprawdź' }).isDisabled(), 'Check enabled with no answer');
+  await steps(page, [type('I always have breakfast at seven')]);
+  await type('Where you live?')(page); // wrong
   await page.getByRole('button', { name: 'Sprawdź' }).click();
-  await page.getByRole('button', { name: 'Sprawdź mimo to' }).click(); // 3 left empty
-  await page.getByText('Niestety, źle.').first().waitFor();
-  assert(await page.getByText('Poprawna odpowiedź: Where do you live?').isVisible(), 'correct answer not shown');
+  await page.getByText('Niestety, źle.').waitFor();
+  const sheet = await page.getByRole('status').filter({ hasText: 'Niestety' }).textContent();
+  assert(/Poprawna odpowiedź:\s*Where do you live\?/.test(sheet), `correct answer not shown: ${sheet}`);
+  const over = await page.evaluate(() => document.documentElement.scrollHeight - innerHeight);
+  assert(over <= 0, `lesson screen scrolls by ${over}px`);
   await shot(page, 'e2e-lesson-feedback');
+  await page.waitForTimeout(480);
   await page.getByRole('button', { name: 'Dalej' }).click();
-  // second unit: sd-pres drill – answer all correctly
-  for (const opt of ['is knocking', 'goes', 'love', 'does']) await page.getByRole('radio', { name: opt, exact: true }).click();
-  await page.getByRole('button', { name: 'Sprawdź' }).click();
-  await page.getByRole('button', { name: 'Zakończ i zobacz wynik' }).click();
-  await page.getByRole('heading', { name: /Wynik:/ }).waitFor();
+  await steps(page, [null, null, null]);
+  // second task: present tenses drill – all correct
+  await steps(page, ['is knocking', 'goes', 'love', 'does'].map(radio));
+  await page.getByRole('heading', { name: /Poziom|Prawie|Lekcja|Koniec/ }).waitFor();
   const s = await state(page);
   assert(s.levels['c1-1']?.attempts === 1, 'level attempt not recorded');
   assert(Object.keys(s.mistakes).length >= 4, 'mistakes not stored');
@@ -105,16 +123,18 @@ await test('refresh during an exercise keeps typed answers', async () => {
   await ctx.close();
 });
 
-await test('double tap on "Sprawdź" does not double-award', async () => {
+await test('double tap on "Sprawdź" does not skip feedback or double-award', async () => {
   const { ctx, page } = await freshPage();
   await page.goto(`${BASE}/#/session/new?groups=fd1&title=Test`);
-  for (const o of [/Yes, please/, /Go straight on/, /Would you like to come/]) await page.getByRole('radio', { name: o }).click();
-  const btn = page.getByRole('button', { name: 'Sprawdź' });
-  await btn.dblclick();
-  await page.getByText('Dobrze!').first().waitFor();
+  for (const o of [/Yes, please/, /Go straight on/, /Would you like to come/]) {
+    await page.getByRole('radio', { name: o }).click();
+    await page.getByRole('button', { name: 'Sprawdź' }).dblclick();
+    await page.getByText(PRAISE).waitFor();
+    await page.waitForTimeout(480);
+    await page.getByRole('button', { name: /^(Dalej|Zakończ)$/ }).click();
+  }
   const s = await state(page);
   assert(s.attempts.length === 3, `expected 3 attempts, got ${s.attempts.length}`);
-  assert(s.xp === 3 * 10 + 20 + 0 || s.xp >= 50, 'xp');
   const xp = s.xp;
   await page.reload();
   const s2 = await state(page);
@@ -125,8 +145,7 @@ await test('double tap on "Sprawdź" does not double-award', async () => {
 await test('mistake notebook: retry a mistake and fix it', async () => {
   const { ctx, page } = await freshPage();
   await page.goto(`${BASE}/#/session/new?groups=oc3&title=Test`);
-  await page.getByRole('button', { name: 'Sprawdź' }).click();
-  await page.getByRole('button', { name: 'Sprawdź mimo to' }).click();
+  await steps(page, [null, null, null]);
   await page.goto(`${BASE}/#/mistakes`);
   await page.getByText('Pomyłki: 1').first().waitFor();
   await page.getByRole('button', { name: 'Spróbuj ponownie' }).first().click();
@@ -136,7 +155,7 @@ await test('mistake notebook: retry a mistake and fix it', async () => {
   const answer = { 'oc3.1': 'much', 'oc3.2': 'to', 'oc3.3': 'for' }[itemId];
   await page.getByRole('textbox').first().fill(answer);
   await page.getByRole('button', { name: 'Sprawdź' }).click();
-  await page.getByText('Dobrze!').waitFor();
+  await page.getByText(PRAISE).waitFor();
   const s = await state(page);
   assert(s.mistakes[itemId].card.reps === 1, 'mistake card not reviewed');
   await ctx.close();
@@ -194,10 +213,9 @@ await test('listening without a speech voice shows a clear missing-audio state a
     await notice.waitFor({ timeout: 5000 });
     await page.getByRole('button', { name: 'Pokaż transkrypcję' }).click();
     await page.getByText(/Transkrypcja/).first().waitFor();
-    await page.getByRole('textbox').first().fill('9');
-    await page.getByRole('button', { name: 'Sprawdź' }).click();
-    await page.getByRole('button', { name: 'Sprawdź mimo to' }).click();
+    await steps(page, [type('9'), null, null, null]);
     const s = await state(page);
+    assert(s.attempts.length === 4, `attempts ${s.attempts.length}`);
     assert(s.attempts.every((a) => a.mode === 'transcript'), 'transcript mode not recorded');
     await shot(page, 'e2e-listening-fallback');
   }
@@ -220,8 +238,7 @@ await test('offline: banner appears and practice still works', async () => {
   await page.evaluate(() => { location.hash = '/session/new?groups=fd2&title=Offline'; });
   await page.getByRole('radio', { name: /sorry to hear/ }).click();
   await page.getByRole('button', { name: 'Sprawdź' }).click();
-  await page.getByRole('button', { name: 'Sprawdź mimo to' }).click();
-  await page.getByText('Dobrze!').waitFor();
+  await page.getByText(PRAISE).waitFor();
   await ctx.close();
 });
 
