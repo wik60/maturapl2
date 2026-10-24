@@ -68,6 +68,8 @@ await test('iPhone: listening is playable even when the voice list is empty (no 
 
 await test('iPhone: first tap unlocks speech; Play queues English speech at full volume without a needless cancel', async () => {
   const { ctx, page } = await iphone();
+  // this clip has a generated recording – make it unavailable to exercise the speech path
+  await ctx.route(/\/audio\/.*\.mp3/, (r) => r.fulfill({ status: 404, body: '' }));
   await page.goto(`${BASE}/#/session/new?groups=lg2&title=iOS`);
   await page.getByRole('button', { name: /Odtwórz Komunikat/ }).waitFor();
   await page.waitForTimeout(2800);

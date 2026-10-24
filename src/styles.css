@@ -423,6 +423,35 @@ main.wide { max-width: 980px; }
 @keyframes bounce { 0% { transform: scale(1); } 35% { transform: scale(1.04); } 70% { transform: scale(0.99); } 100% { transform: scale(1); } }
 @keyframes shake { 0%, 100% { transform: none; } 20% { transform: translateX(-7px); } 40% { transform: translateX(6px); } 60% { transform: translateX(-4px); } 80% { transform: translateX(2px); } }
 
+/* sentence builder: word tiles */
+.builder { display: flex; flex-direction: column; gap: 1.1rem; }
+.build-line {
+  position: relative; display: flex; flex-wrap: wrap; align-content: flex-start; gap: 0.5rem; min-height: 120px;
+  padding: 0.6rem 0.1rem 0.9rem;
+  background-image: repeating-linear-gradient(to bottom, transparent 0, transparent 55px, var(--line) 55px, var(--line) 57px);
+}
+.build-hint { color: var(--muted); font-size: 0.95rem; padding: 0.7rem 0.2rem; }
+.build-end { align-self: center; font-family: var(--font-read); font-size: 1.3rem; font-weight: 700; color: var(--muted); margin-left: -0.2rem; }
+.build-tip { margin: -0.7rem 0 0; font-size: 0.8rem; color: var(--muted); text-align: center; animation: fade-in 0.3s ease; }
+.build-bank { display: flex; flex-wrap: wrap; justify-content: center; gap: 0.5rem; }
+.build-bank .slot { display: inline-flex; border-radius: 14px; background: var(--sunk); }
+.tile {
+  font: inherit; font-family: var(--font-read); font-weight: 700; font-size: 1.08rem; color: var(--text);
+  min-height: 46px; padding: 0.45rem 0.9rem; border-radius: 14px; cursor: pointer;
+  background: var(--card); border: 2px solid var(--line); border-bottom-width: 5px;
+  transition: transform 0.08s, border-bottom-width 0.08s, opacity 0.2s, background 0.2s;
+  touch-action: manipulation; user-select: none; -webkit-user-select: none;
+}
+.tile:active:not(:disabled) { transform: translateY(3px); border-bottom-width: 2px; margin-bottom: 3px; }
+.tile.used { visibility: hidden; }
+.tile.placed { animation: tile-in 0.22s var(--ease-spring); touch-action: none; cursor: grab; }
+.tile.placed.ghost { opacity: 0.25; border-style: dashed; }
+.tile.floating { position: fixed; z-index: 80; pointer-events: none; transform: scale(1.06) rotate(-2deg); box-shadow: 0 14px 28px -10px rgba(0, 0, 0, 0.35); border-color: var(--ink); animation: none; display: inline-flex; align-items: center; justify-content: center; }
+.builder.good .tile.placed { border-color: var(--good); background: var(--good-soft); }
+.builder.bad .tile.placed { border-color: var(--bad); background: var(--bad-soft); animation: shake 0.42s ease; }
+.tile:disabled { cursor: default; }
+@keyframes tile-in { from { transform: scale(0.6); opacity: 0; } }
+
 /* exam/results view (whole task on one sheet) */
 .ex-head { display: flex; align-items: center; gap: 0.6rem; margin-bottom: 0.6rem; }
 .ex-head .progress { flex: 1; }

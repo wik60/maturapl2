@@ -51,6 +51,11 @@ async function steps(page, picks) {
 }
 const radio = (name) => (page) => page.getByRole('radio', { name, exact: typeof name === 'string' }).click();
 const type = (text) => (page) => page.getByRole('textbox').first().fill(text);
+/** Sentence builder: tap word tiles in order. */
+const tiles = (words) => async (page) => {
+  const bank = page.getByRole('group', { name: 'Słowa do wyboru' });
+  for (const w of words) await bank.getByRole('button', { name: w, exact: true }).click();
+};
 
 const shot = async (page, name) => SHOTS && page.screenshot({ path: `${SHOTS}/${name}.png` });
 
@@ -92,8 +97,8 @@ await test('map lesson on a phone: one question per screen, wrong answer sheet, 
   await page.getByRole('button', { name: 'Zacznij' }).click();
   await page.getByText('Obóz startowy: Szyk zdania').waitFor({ state: 'attached' });
   assert(await page.getByRole('button', { name: 'Sprawdź' }).isDisabled(), 'Check enabled with no answer');
-  await steps(page, [type('I always have breakfast at seven')]);
-  await type('Where you live?')(page); // wrong
+  await steps(page, [tiles(['I', 'always', 'have', 'breakfast', 'at seven'])]);
+  await tiles(['where', 'you', 'live'])(page); // wrong: "do" left out
   await page.getByRole('button', { name: 'Sprawdź' }).click();
   await page.getByText('Niestety, źle.').waitFor();
   const sheet = await page.getByRole('status').filter({ hasText: 'Niestety' }).textContent();
@@ -110,6 +115,45 @@ await test('map lesson on a phone: one question per screen, wrong answer sheet, 
   const s = await state(page);
   assert(s.levels['c1-1']?.attempts === 1, 'level attempt not recorded');
   assert(Object.keys(s.mistakes).length >= 4, 'mistakes not stored');
+  await ctx.close();
+});
+
+await test('sentence builder: tap tiles, tap to remove, drag to reorder, keeps order after refresh', async () => {
+  const { ctx, page, errors } = await freshPage();
+  await page.goto(`${BASE}/#/session/new?groups=sb2&title=Test`);
+  const line = page.getByRole('group', { name: /Twoje zdanie/ });
+  assert(!(await page.getByRole('textbox').count()), 'text box still shown');
+  await tiles(['could', 'you', 'tell', 'me', 'where', 'is', 'the station'])(page);
+  const answer = async () => (await state(page)).sessions[(await state(page)).activeSessionId].answers['sb2.1'];
+  assert((await answer()) === 'could you tell me where is the station', `got ${await answer()}`);
+  // tap a placed word → back to the bank
+  await line.getByRole('button', { name: /^tell –/ }).click();
+  assert((await answer()) === 'could you me where is the station', `remove failed: ${await answer()}`);
+  await tiles(['tell'])(page);
+  // now: could you me where is the station tell → drag "tell" between "you" and "me"
+  const drag = async (word, before) => {
+    const a = await line.getByRole('button', { name: new RegExp(`^${word} –`) }).boundingBox();
+    const b = await line.getByRole('button', { name: new RegExp(`^${before} –`) }).boundingBox();
+    await page.mouse.move(a.x + a.width / 2, a.y + a.height / 2);
+    await page.mouse.down();
+    for (let k = 1; k <= 8; k++) await page.mouse.move(a.x + a.width / 2 + ((b.x + 6) - (a.x + a.width / 2)) * k / 8, a.y + a.height / 2 + ((b.y + b.height / 2) - (a.y + a.height / 2)) * k / 8);
+    await page.mouse.up();
+  };
+  await drag('tell', 'me');
+  assert((await answer()) === 'could you tell me where is the station', `drag 1 failed: ${await answer()}`);
+  await drag('the station', 'is');
+  assert((await answer()) === 'could you tell me where the station is', `drag 2 failed: ${await answer()}`);
+  await shot(page, 'e2e-builder');
+  await page.reload();
+  await page.getByRole('group', { name: /Twoje zdanie: Could you tell me where the station is\?/ }).waitFor();
+  // keyboard: focus a word and move it with arrows
+  await page.getByRole('group', { name: /Twoje zdanie/ }).getByRole('button', { name: /^is –/ }).focus();
+  await page.keyboard.press('ArrowLeft');
+  assert((await answer()) === 'could you tell me where is the station', `arrow failed: ${await answer()}`);
+  await page.keyboard.press('ArrowRight');
+  await page.getByRole('button', { name: 'Sprawdź' }).click();
+  await page.getByText(PRAISE).waitFor();
+  assert(errors.length === 0, errors.join('|'));
   await ctx.close();
 });
 
@@ -204,21 +248,15 @@ await test('expired exam auto-submits when reopened', async () => {
   await ctx.close();
 });
 
-await test('listening without a speech voice shows a clear missing-audio state and transcript fallback', async () => {
+await test('listening with a generated recording is playable without any speech voice', async () => {
   const { ctx, page } = await freshPage();
   await page.goto(`${BASE}/#/session/new?groups=lg2&title=Test`);
-  const notice = page.getByText('Nie możemy odtworzyć nagrania w tej przeglądarce.');
-  const hasVoice = await page.evaluate(() => (speechSynthesis.getVoices() || []).some((v) => v.lang.startsWith('en')));
-  if (!hasVoice) {
-    await notice.waitFor({ timeout: 5000 });
-    await page.getByRole('button', { name: 'Pokaż transkrypcję' }).click();
-    await page.getByText(/Transkrypcja/).first().waitFor();
-    await steps(page, [type('9'), null, null, null]);
-    const s = await state(page);
-    assert(s.attempts.length === 4, `attempts ${s.attempts.length}`);
-    assert(s.attempts.every((a) => a.mode === 'transcript'), 'transcript mode not recorded');
-    await shot(page, 'e2e-listening-fallback');
-  }
+  const play = page.getByRole('button', { name: /Odtwórz Komunikat/ });
+  await play.waitFor();
+  await page.waitForTimeout(2800); // voice check times out in headless Chromium
+  assert(await play.isEnabled(), 'play disabled although a recording exists');
+  assert(!(await page.getByText('Nie możemy odtworzyć nagrania w tej przeglądarce.').isVisible()), 'transcript fallback offered although a recording exists');
+  assert(await page.getByText(/Głos AI z autorskiego skryptu/).isVisible(), 'AI voice label missing');
   await ctx.close();
 });
 

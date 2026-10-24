@@ -87,7 +87,7 @@ export const grammarDrills: TaskGroup[] = [
   ]),
 ];
 
-const BUILD_INSTR = 'Ćwiczenie dodatkowe. Ułóż poprawne zdanie z podanych wyrazów i wpisz je w całości.';
+const BUILD_INSTR = 'Ćwiczenie dodatkowe. Ułóż poprawne zdanie z podanych wyrazów.';
 
 export const sentenceBuildGroups: TaskGroup[] = [
   {

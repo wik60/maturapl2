@@ -5,6 +5,7 @@ import type { ItemResult } from '../../engine/validate';
 import { AudioPlayer } from './AudioPlayer';
 import type { AudioPolicy } from './GroupView';
 import { fullGroup, GapText, McInput, OpenInput } from './GroupView';
+import { SentenceBuilder } from './SentenceBuilder';
 
 /**
  * One question per screen (lesson mode). Shows only the context this item needs:
@@ -162,7 +163,8 @@ export function ItemStep({
   const n = itemIndex(group, item) + 1;
   const total = fullGroup(group).items.length;
   const isGramm = group.format === 'U_GRAMMATICALISE' || group.format === 'U_TRANSLATE_OPEN';
-  const showPrompt = item.prompt && !(item.kind === 'open' && isGramm);
+  const isBuild = group.format === 'S_SENTENCE_BUILD' && item.kind === 'open' && (item.prompt ?? '').includes('/');
+  const showPrompt = item.prompt && !(item.kind === 'open' && isGramm) && !isBuild;
   const prompt = item.kind === 'match' && !item.prompt ? `Pozycja ${n}` : item.prompt;
 
   return (
@@ -177,7 +179,13 @@ export function ItemStep({
       {item.kind === 'open' && item.keyWord && <div><span className="keyword">{item.keyWord}</span></div>}
       {item.kind === 'mc' && <McInput item={item} value={value} onChange={onAnswer} result={result} name={name} />}
       {item.kind === 'match' && <Choices options={group.options ?? []} value={value} onChange={onAnswer} result={result} answer={item.answer} name={name} />}
-      {item.kind === 'open' && (
+      {isBuild && item.kind === 'open' && (
+        <>
+          <h2 className="step-prompt">Ułóż zdanie</h2>
+          <SentenceBuilder item={item} value={value} onChange={onAnswer} result={result} ending={/[?]$/.test(item.accepted[0] ?? '') ? '?' : '.'} />
+        </>
+      )}
+      {item.kind === 'open' && !isBuild && (
         <form onSubmit={(e) => e.preventDefault()}>
           <OpenInput item={item} value={value} onChange={onAnswer} result={result} label={`Pozycja ${n}: wpisz odpowiedź`} group={group} />
         </form>
